@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pigeon Management System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .auth-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+        .pigeon-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .pigeon-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+        .navbar-brand {
+            font-weight: bold;
+            color: #667eea !important;
+        }
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border: none;
+            border-radius: 25px;
+            padding: 10px 30px;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(45deg, #5a6fd8, #6a4190);
+            transform: translateY(-2px);
+        }
+        .form-control {
+            border-radius: 15px;
+            border: 2px solid #e9ecef;
+            padding: 12px 20px;
+        }
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        .pedigree-tree {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 15px;
+        }
+        .pedigree-level {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+        .pedigree-item {
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            padding: 8px 15px;
+            margin: 0 10px;
+            font-size: 0.9em;
+            text-align: center;
+            min-width: 120px;
+        }
+        .hidden {
+            display: none !important;
+        }
+        .image-upload-container {
+            border: 2px dashed #667eea;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            background: #f8f9fa;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .image-upload-container:hover {
+            border-color: #5a6fd8;
+            background: #e9ecef;
+        }
+        .image-preview {
+            max-width: 150px;
+            max-height: 150px;
+            border-radius: 10px;
+            margin-top: 10px;
+            border: 2px solid #667eea;
+        }
+        .pigeon-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 10px 10px 0 0;
+        }
+        .family-image {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 2px solid #667eea;
+        }
+        .pedigree-image {
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 1px solid #667eea;
+            margin-top: 5px;
+        }
+        .image-upload-label {
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        .remove-image {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(220, 53, 69, 0.9);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .image-container {
+            position: relative;
+            display: inline-block;
+        }
+        
+        /* Enhanced Pigeon Details Modal Styles */
+        .pigeon-details-modal {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        }
+        
+        .pigeon-details-modal .modal-content {
+            border: none;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+        }
+        
+        .pigeon-details-modal .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-bottom: none;
+            padding: 25px 30px;
+        }
+        
+        .pigeon-details-modal .modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        
+        .pigeon-details-modal .modal-body {
+            padding: 30px;
+        }
+        
+        .pigeon-details-modal .modal-footer {
+            border-top: none;
+            padding: 20px 30px;
+            background: #f8f9fa;
+        }
+        
+        /* Enhanced Image Display */
+        .pigeon-main-image {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease;
+        }
+        
+        .pigeon-main-image:hover {
+            transform: scale(1.02);
+        }
+        
+        .pigeon-main-image-placeholder {
+            width: 100%;
+            height: 300px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 4rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* Information Cards */
+        .info-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e9ecef;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .info-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+        }
+        
+        .info-card h6 {
+            color: #667eea;
+            font-weight: 600;
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        .info-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            transition: background 0.3s ease;
+        }
+        
+        .info-item:hover {
+            background: #e9ecef;
+        }
+        
+        .info-label {
+            font-weight: 600;
+            color: #495057;
+            min-width: 120px;
+            margin-right: 15px;
+        }
+        
+        .info-value {
+            color: #212529;
+            flex: 1;
+        }
+        
+        /* Enhanced Family Images */
+        .family-member {
+            display: flex;
+            align-items: center;
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease;
+        }
+        
+        .family-member:hover {
+            transform: translateX(5px);
+        }
+        
+        .family-member-image {
+            width: 70px;
+            height: 70px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 3px solid #667eea;
+            margin-right: 15px;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        .family-member-info {
+            flex: 1;
+        }
+        
+        .family-member-name {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 5px;
+        }
+        
+        .family-member-role {
+            color: #667eea;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        /* Enhanced Pedigree Tree */
+        .pedigree-tree-enhanced {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 20px;
+            padding: 25px;
+            margin-top: 20px;
+            border: 2px solid #667eea;
+        }
+        
+        .pedigree-level-enhanced {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .pedigree-level-enhanced:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2px;
+            height: 20px;
+            background: #667eea;
+        }
+        
+        .pedigree-item-enhanced {
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 15px;
+            padding: 15px;
+            margin: 0 10px;
+            text-align: center;
+            min-width: 140px;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+            transition: transform 0.3s ease;
+        }
+        
+        .pedigree-item-enhanced:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+        
+        .pedigree-item-enhanced strong {
+            color: #667eea;
+            font-size: 0.8rem;
+            display: block;
+            margin-bottom: 8px;
+        }
+        
+        .pedigree-image-enhanced {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 2px solid #667eea;
+            margin: 8px auto;
+            display: block;
+            box-shadow: 0 3px 10px rgba(102, 126, 234, 0.3);
+        }
+        
+        /* Enhanced Gallery */
+        .gallery-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        }
+        
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .gallery-item {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .gallery-item:hover {
+            transform: scale(1.05);
+        }
+        
+        .gallery-image {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            display: block;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .pigeon-details-modal .modal-body {
+                padding: 20px;
+            }
+            
+            .info-card {
+                padding: 20px;
+            }
+            
+            .pedigree-level-enhanced {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .pedigree-item-enhanced {
+                margin: 5px 0;
+                min-width: 200px;
+            }
+            
+            .gallery-grid {
+                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+                gap: 10px;
+            }
+        }
+        
+        /* Loading Animation */
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Placeholder Images */
+        .family-member-image.bg-light,
+        .pedigree-image-enhanced.bg-light {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
+            border: 2px solid #dee2e6;
+            color: #6c757d;
+            font-size: 1.5rem;
+        }
+        
+        .family-member-image.bg-light i,
+        .pedigree-image-enhanced.bg-light i {
+            font-size: 1.2rem;
+        }
+        
+        /* Enhanced Modal Animations */
+        .pigeon-details-modal .modal-content {
+            animation: slideInUp 0.3s ease-out;
+        }
+        
+        @keyframes slideInUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        /* Hover Effects for Interactive Elements */
+        .info-item:hover .info-label {
+            color: #667eea;
+        }
+        
+        .family-member:hover .family-member-image {
+            border-color: #5a6fd8;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+        
+        .gallery-item:hover .gallery-image {
+            filter: brightness(1.1);
+        }
+        
+        /* Status Indicators */
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-active {
+            background-color: #28a745;
+        }
+        
+        .status-inactive {
+            background-color: #dc3545;
+        }
+        
+        /* Enhanced Typography */
+        .pigeon-details-modal .modal-title {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            letter-spacing: 0.5px;
+        }
+        
+        .info-card h6 {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            letter-spacing: 0.3px;
+        }
+        
+        /* Custom Scrollbar for Modal */
+        .pigeon-details-modal .modal-body::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .pigeon-details-modal .modal-body::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        
+        .pigeon-details-modal .modal-body::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 4px;
+        }
+        
+        .pigeon-details-modal .modal-body::-webkit-scrollbar-thumb:hover {
+            background: #5a6fd8;
+        }
+    </style>
+</head>
+<body>
+    <!-- Authentication Section -->
+    <div id="authSection" class="container-fluid d-flex align-items-center justify-content-center min-vh-100">
+        <div class="auth-container p-5" style="max-width: 400px;">
+            <div class="text-center mb-4">
+                <i class="fas fa-dove fa-3x text-primary mb-3"></i>
+                <h2 class="fw-bold text-primary">Pigeon Manager</h2>
+                <p class="text-muted">Manage your pigeon collection with ease</p>
+            </div>
+            
+            <!-- Login Form -->
+            <div id="loginForm">
+                <h4 class="text-center mb-4">Login</h4>
+                <form id="loginFormElement">
+                    <div class="mb-3">
+                        <label for="loginEmail" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="loginEmail" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="loginPassword" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="loginPassword" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 mb-3">Login</button>
+                </form>
+                <p class="text-center">Don't have an account? <a href="#" id="showSignup" class="text-primary">Sign up</a></p>
+            </div>
+
+            <!-- Signup Form -->
+            <div id="signupForm" class="hidden">
+                <h4 class="text-center mb-4">Sign Up</h4>
+                <form id="signupFormElement">
+                    <div class="mb-3">
+                        <label for="signupName" class="form-label">Full Name</label>
+                        <input type="text" class="form-control" id="signupName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="signupEmail" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="signupEmail" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="signupPassword" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="signupPassword" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="signupConfirmPassword" class="form-label">Confirm Password</label>
+                        <input type="password" class="form-control" id="signupConfirmPassword" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 mb-3">Sign Up</button>
+                </form>
+                <p class="text-center">Already have an account? <a href="#" id="showLogin" class="text-primary">Login</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Application Section -->
+    <div id="mainApp" class="hidden">
+        <!-- Navigation -->
+        <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+            <div class="container">
+                <a class="navbar-brand" href="#">
+                    <i class="fas fa-dove me-2"></i>Pigeon Manager
+                </a>
+                <div class="navbar-nav ms-auto">
+                    <div class="d-flex align-items-center me-3">
+                        <div class="dropdown">
+                            <button class="btn btn-link dropdown-toggle text-decoration-none" type="button" id="userDropdown" data-bs-toggle="dropdown">
+                                <img id="userProfileImage" src="https://via.placeholder.com/32x32/667eea/ffffff?text=U" class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;">
+                                <span id="userInfo"></span>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#profileModal">
+                                    <i class="fas fa-user me-2"></i>Profile Settings
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="#" id="logoutBtn">
+                                    <i class="fas fa-sign-out-alt me-2"></i>Logout
+                                </a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <div class="container mt-4">
+            <!-- Header -->
+            <div class="row mb-4">
+                <div class="col-md-8">
+                    <h2 class="text-white fw-bold">My Pigeons</h2>
+                    <p class="text-white-50">Manage your pigeon collection and track their pedigrees</p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addPigeonModal">
+                        <i class="fas fa-plus me-2"></i>Add New Pigeon
+                    </button>
+                </div>
+            </div>
+
+            <!-- Search and Filter Bar -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card bg-white bg-opacity-90">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <input type="text" class="form-control" id="searchInput" placeholder="Search pigeons...">
+                                </div>
+                                <div class="col-md-2">
+                                    <select class="form-select" id="colorFilter">
+                                        <option value="">All Colors</option>
+                                        <option value="Blue">Blue</option>
+                                        <option value="Red">Red</option>
+                                        <option value="Black">Black</option>
+                                        <option value="White">White</option>
+                                        <option value="Silver">Silver</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <select class="form-select" id="sexFilter">
+                                        <option value="">All Sexes</option>
+                                        <option value="Male">Male</option>
+                                        <option value="Female">Female</option>
+                                        <option value="Unknown">Unknown</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <select class="form-select" id="sortBy">
+                                        <option value="name">Sort by Name</option>
+                                        <option value="dateOfBirth">Sort by Age</option>
+                                        <option value="createdAt">Sort by Added Date</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <button class="btn btn-outline-secondary w-100" id="clearFilters">
+                                        <i class="fas fa-times me-1"></i>Clear
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pigeons Grid -->
+            <div class="row" id="pigeonsGrid">
+                <!-- Pigeon cards will be dynamically added here -->
+            </div>
+        </div>
+
+        <!-- Add/Edit Pigeon Modal -->
+        <div class="modal fade" id="addPigeonModal" tabindex="-1">
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalTitle">Add New Pigeon</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="pigeonForm" enctype="multipart/form-data">
+                            <input type="hidden" id="pigeonId">
+                            
+                            <!-- Basic Information -->
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <h6 class="fw-bold mb-3">Basic Information</h6>
+                                    <div class="mb-3">
+                                        <label for="pigeonName" class="form-label">Pigeon Name *</label>
+                                        <input type="text" class="form-control" id="pigeonName" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="ringNumber" class="form-label">Ring Number</label>
+                                        <input type="text" class="form-control" id="ringNumber" placeholder="e.g., NL-2023-1234567">
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="dateOfBirth" class="form-label">Date of Birth</label>
+                                                <input type="date" class="form-control" id="dateOfBirth">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="color" class="form-label">Color</label>
+                                                <select class="form-select" id="color">
+                                                    <option value="">Select Color</option>
+                                                    <option value="Blue">Blue</option>
+                                                    <option value="Red">Red</option>
+                                                    <option value="Black">Black</option>
+                                                    <option value="White">White</option>
+                                                    <option value="Silver">Silver</option>
+                                                    <option value="Other">Other</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="sex" class="form-label">Sex</label>
+                                                <select class="form-select" id="sex">
+                                                    <option value="Unknown">Unknown</option>
+                                                    <option value="Male">Male</option>
+                                                    <option value="Female">Female</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="strain" class="form-label">Strain</label>
+                                                <input type="text" class="form-control" id="strain" placeholder="e.g., Janssen, Aarden">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="breeder" class="form-label">Breeder</label>
+                                        <input type="text" class="form-control" id="breeder" placeholder="Breeder name">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="notes" class="form-label">Notes</label>
+                                        <textarea class="form-control" id="notes" rows="3" placeholder="Additional notes about this pigeon"></textarea>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="fw-bold mb-3">Pigeon Image</h6>
+                                    <div class="image-upload-container" onclick="document.getElementById('pigeonImageInput').click()">
+                                        <div class="image-upload-label">
+                                            <i class="fas fa-camera fa-2x mb-2"></i><br>
+                                            Click to upload pigeon image
+                                        </div>
+                                        <div id="pigeonImagePreview"></div>
+                                        <input type="file" id="pigeonImageInput" name="pigeonImage" accept="image/*" style="display: none;">
+                                    </div>
+                                    
+                                    <h6 class="fw-bold mb-3 mt-4">Gallery Images</h6>
+                                    <div class="image-upload-container" onclick="document.getElementById('galleryImagesInput').click()">
+                                        <div class="image-upload-label">
+                                            <i class="fas fa-images fa-2x mb-2"></i><br>
+                                            Click to upload gallery images (up to 10)
+                                        </div>
+                                        <div id="galleryImagesPreview"></div>
+                                        <input type="file" id="galleryImagesInput" name="galleryImages" accept="image/*" multiple style="display: none;">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Parents Information -->
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <h6 class="fw-bold mb-3">Father Information</h6>
+                                    <div class="mb-3">
+                                        <label for="fatherName" class="form-label">Father's Name</label>
+                                        <input type="text" class="form-control" id="fatherName">
+                                    </div>
+                                    <div class="image-upload-container" onclick="document.getElementById('fatherImageInput').click()">
+                                        <div class="image-upload-label">
+                                            <i class="fas fa-male fa-lg mb-2"></i><br>
+                                            Father's Image
+                                        </div>
+                                        <div id="fatherImagePreview"></div>
+                                        <input type="file" id="fatherImageInput" name="fatherImage" accept="image/*" style="display: none;">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="fw-bold mb-3">Mother Information</h6>
+                                    <div class="mb-3">
+                                        <label for="motherName" class="form-label">Mother's Name</label>
+                                        <input type="text" class="form-control" id="motherName">
+                                    </div>
+                                    <div class="image-upload-container" onclick="document.getElementById('motherImageInput').click()">
+                                        <div class="image-upload-label">
+                                            <i class="fas fa-female fa-lg mb-2"></i><br>
+                                            Mother's Image
+                                        </div>
+                                        <div id="motherImagePreview"></div>
+                                        <input type="file" id="motherImageInput" name="motherImage" accept="image/*" style="display: none;">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Pedigree Information -->
+                            <div class="mb-4">
+                                <h6 class="fw-bold mb-3">Pedigree Information</h6>
+                                <div class="pedigree-tree">
+                                    <!-- Great-Great-Grandparents -->
+                                    <div class="pedigree-level">
+                                        <div class="pedigree-item">
+                                            <strong>Great-Great-Grandfather</strong><br>
+                                            <input type="text" class="form-control form-control-sm mt-1" id="gggFatherName" name="gggFatherName" placeholder="Name">
+                                            <div class="image-upload-container mt-2" onclick="document.getElementById('gggFatherImageInput').click()">
+                                                <i class="fas fa-image fa-sm"></i>
+                                                <input type="file" id="gggFatherImageInput" name="gggFatherImage" accept="image/*" style="display: none;">
+                                            </div>
+                                            <div id="gggFatherImagePreview"></div>
+                                        </div>
+                                        <div class="pedigree-item">
+                                            <strong>Great-Great-Grandmother</strong><br>
+                                            <input type="text" class="form-control form-control-sm mt-1" id="gggMotherName" name="gggMotherName" placeholder="Name">
+                                            <div class="image-upload-container mt-2" onclick="document.getElementById('gggMotherImageInput').click()">
+                                                <i class="fas fa-image fa-sm"></i>
+                                                <input type="file" id="gggMotherImageInput" name="gggMotherImage" accept="image/*" style="display: none;">
+                                            </div>
+                                            <div id="gggMotherImagePreview"></div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Great-Grandparents -->
+                                    <div class="pedigree-level">
+                                        <div class="pedigree-item">
+                                            <strong>Great-Grandfather</strong><br>
+                                            <input type="text" class="form-control form-control-sm mt-1" id="ggFatherName" name="ggFatherName" placeholder="Name">
+                                            <div class="image-upload-container mt-2" onclick="document.getElementById('ggFatherImageInput').click()">
+                                                <i class="fas fa-image fa-sm"></i>
+                                                <input type="file" id="ggFatherImageInput" name="ggFatherImage" accept="image/*" style="display: none;">
+                                            </div>
+                                            <div id="ggFatherImagePreview"></div>
+                                        </div>
+                                        <div class="pedigree-item">
+                                            <strong>Great-Grandmother</strong><br>
+                                            <input type="text" class="form-control form-control-sm mt-1" id="ggMotherName" name="ggMotherName" placeholder="Name">
+                                            <div class="image-upload-container mt-2" onclick="document.getElementById('ggMotherImageInput').click()">
+                                                <i class="fas fa-image fa-sm"></i>
+                                                <input type="file" id="ggMotherImageInput" name="ggMotherImage" accept="image/*" style="display: none;">
+                                            </div>
+                                            <div id="ggMotherImagePreview"></div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Grandparents -->
+                                    <div class="pedigree-level">
+                                        <div class="pedigree-item">
+                                            <strong>Grandfather</strong><br>
+                                            <input type="text" class="form-control form-control-sm mt-1" id="gFatherName" name="gFatherName" placeholder="Name">
+                                            <div class="image-upload-container mt-2" onclick="document.getElementById('gFatherImageInput').click()">
+                                                <i class="fas fa-image fa-sm"></i>
+                                                <input type="file" id="gFatherImageInput" name="gFatherImage" accept="image/*" style="display: none;">
+                                            </div>
+                                            <div id="gFatherImagePreview"></div>
+                                        </div>
+                                        <div class="pedigree-item">
+                                            <strong>Grandmother</strong><br>
+                                            <input type="text" class="form-control form-control-sm mt-1" id="gMotherName" name="gMotherName" placeholder="Name">
+                                            <div class="image-upload-container mt-2" onclick="document.getElementById('gMotherImageInput').click()">
+                                                <i class="fas fa-image fa-sm"></i>
+                                                <input type="file" id="gMotherImageInput" name="gMotherImage" accept="image/*" style="display: none;">
+                                            </div>
+                                            <div id="gMotherImagePreview"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" id="savePigeonBtn">Save Pigeon</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Settings Modal -->
+        <div class="modal fade" id="profileModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Profile Settings</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="profileForm" enctype="multipart/form-data">
+                            <div class="text-center mb-4">
+                                <div class="position-relative d-inline-block">
+                                    <img id="profileImagePreview" src="https://via.placeholder.com/100x100/667eea/ffffff?text=U" class="rounded-circle" style="width: 100px; height: 100px; object-fit: cover;">
+                                    <button type="button" class="btn btn-sm btn-primary position-absolute bottom-0 end-0" onclick="document.getElementById('profileImageInput').click()">
+                                        <i class="fas fa-camera"></i>
+                                    </button>
+                                </div>
+                                <input type="file" id="profileImageInput" name="profileImage" accept="image/*" style="display: none;">
+                            </div>
+                            <div class="mb-3">
+                                <label for="profileName" class="form-label">Full Name</label>
+                                <input type="text" class="form-control" id="profileName" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="profileEmail" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="profileEmail" required readonly>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" id="saveProfileBtn">Save Changes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- View Pigeon Modal -->
+        <div class="modal fade pigeon-details-modal" id="viewPigeonModal" tabindex="-1">
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="fas fa-dove me-2"></i>Pigeon Details
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body" id="pigeonDetails">
+                        <!-- Pigeon details will be displayed here -->
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times me-2"></i>Close
+                        </button>
+                        <button type="button" class="btn btn-primary" id="editPigeonBtn">
+                            <i class="fas fa-edit me-2"></i>Edit
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

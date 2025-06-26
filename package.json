@@ -1,0 +1,58 @@
+{
+  "name": "pigeon-manager-vercel",
+  "version": "1.0.0",
+  "description": "Pigeon Management System - Full-stack application deployed on Vercel with serverless functions",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo 'No build step needed for static files'",
+    "start": "vercel dev",
+    "deploy": "vercel --prod",
+    "deploy:preview": "vercel",
+    "test": "node test-vercel-setup.js",
+    "lint": "echo 'No linting configured'",
+    "clean": "echo 'No cleanup needed'"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "mongoose": "^7.0.0",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.0",
+    "multer": "^1.4.5-lts.1",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "vercel": "^32.0.0"
+  },
+  "engines": {
+    "node": ">=18.x",
+    "npm": ">=8.x"
+  },
+  "keywords": [
+    "pigeon",
+    "management",
+    "vercel",
+    "serverless",
+    "mongodb",
+    "express",
+    "fullstack",
+    "javascript"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/pigeon-manager.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/pigeon-manager/issues"
+  },
+  "homepage": "https://your-pigeon-manager.vercel.app",
+  "private": false,
+  "vercel": {
+    "buildCommand": "npm run build",
+    "outputDirectory": "public",
+    "installCommand": "npm install",
+    "framework": "other"
+  }
+} 
