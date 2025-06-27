@@ -1,6 +1,8 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
+console.log('Loading User model...');
+
 const userSchema = new mongoose.Schema({
     name: {
         type: String,
@@ -29,22 +31,30 @@ const userSchema = new mongoose.Schema({
     timestamps: true
 });
 
+console.log('User schema defined');
+
 // Hash password before saving
 userSchema.pre('save', async function(next) {
+    console.log('User pre-save hook triggered');
     if (!this.isModified('password')) return next();
     
     try {
         const salt = await bcrypt.genSalt(10);
         this.password = await bcrypt.hash(this.password, salt);
+        console.log('Password hashed successfully');
         next();
     } catch (error) {
+        console.error('Password hashing error:', error);
         next(error);
     }
 });
 
 // Method to compare password
 userSchema.methods.comparePassword = async function(candidatePassword) {
-    return await bcrypt.compare(candidatePassword, this.password);
+    console.log('Comparing passwords...');
+    const result = await bcrypt.compare(candidatePassword, this.password);
+    console.log('Password comparison result:', result);
+    return result;
 };
 
 // Method to get user without password
@@ -54,4 +64,7 @@ userSchema.methods.toJSON = function() {
     return user;
 };
 
-module.exports = mongoose.model('User', userSchema); 
+const User = mongoose.model('User', userSchema);
+console.log('User model created');
+
+module.exports = User; 

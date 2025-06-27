@@ -1,52 +1,58 @@
-const https = require('https');
+const fetch = require('node-fetch');
 
-function testLogin(email, password) {
-  const data = JSON.stringify({
-    email: email,
-    password: password
-  });
+// Replace with your actual Vercel deployment URL
+const BASE_URL = 'https://your-app-name.vercel.app'; // Replace with your actual URL
 
-  const options = {
-    hostname: 'pegions.vercel.app',
-    port: 443,
-    path: '/api/auth/login',
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Content-Length': data.length
+async function testLogin() {
+    try {
+        console.log('Testing login endpoint...');
+        console.log('URL:', `${BASE_URL}/api/auth/login`);
+        
+        const response = await fetch(`${BASE_URL}/api/auth/login`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                email: 'test@example.com',
+                password: 'password123'
+            })
+        });
+
+        console.log('Response status:', response.status);
+        console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
+        const data = await response.json();
+        console.log('Response data:', data);
+
+    } catch (error) {
+        console.error('Test failed:', error);
     }
-  };
-
-  const req = https.request(options, (res) => {
-    console.log(`Status: ${res.statusCode}`);
-    console.log(`Headers:`, res.headers);
-
-    let responseData = '';
-    res.on('data', (chunk) => {
-      responseData += chunk;
-    });
-
-    res.on('end', () => {
-      try {
-        const parsed = JSON.parse(responseData);
-        console.log('Response:', parsed);
-      } catch (e) {
-        console.log('Raw response:', responseData);
-      }
-    });
-  });
-
-  req.on('error', (e) => {
-    console.error(`Problem with request: ${e.message}`);
-  });
-
-  req.write(data);
-  req.end();
 }
 
-// Test with sample credentials
-console.log('Testing login with sample credentials...');
-testLogin('test@example.com', 'password123');
+async function testHealth() {
+    try {
+        console.log('Testing health endpoint...');
+        console.log('URL:', `${BASE_URL}/api/health`);
+        
+        const response = await fetch(`${BASE_URL}/api/health`);
+        console.log('Health check status:', response.status);
+        
+        const data = await response.json();
+        console.log('Health check data:', data);
 
-// You can also test with your actual credentials
-// testLogin('your-email@example.com', 'your-password'); 
+    } catch (error) {
+        console.error('Health check failed:', error);
+    }
+}
+
+// Run tests
+async function runTests() {
+    console.log('=== Testing Health Endpoint ===');
+    await testHealth();
+    
+    console.log('\n=== Testing Login Endpoint ===');
+    await testLogin();
+}
+
+runTests(); 
