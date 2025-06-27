@@ -30,13 +30,21 @@ async function apiFetch(url, options = {}, retries = 3) {
 
     const finalOptions = { ...defaultOptions, ...options };
 
+    console.log('API Fetch:', { url, method: finalOptions.method, body: finalOptions.body });
+
     for (let attempt = 1; attempt <= retries; attempt++) {
         try {
+            console.log(`API attempt ${attempt}/${retries} for:`, url);
+            
             const response = await fetch(url, finalOptions);
+            
+            console.log('Response status:', response.status);
+            console.log('Response headers:', Object.fromEntries(response.headers.entries()));
             
             // Handle different response types
             if (response.headers.get('content-type')?.includes('application/json')) {
                 const data = await response.json();
+                console.log('Response data:', data);
                 
                 if (!response.ok) {
                     throw new Error(data.message || `HTTP ${response.status}: ${response.statusText}`);
@@ -328,11 +336,16 @@ async function handleLogin(e) {
     const email = document.getElementById('loginEmail').value;
     const password = document.getElementById('loginPassword').value;
 
+    console.log('Login attempt:', { email, password: '***' });
+    console.log('API URL:', `${API_BASE_URL}/auth/login`);
+
     try {
         const data = await apiFetch(`${API_BASE_URL}/auth/login`, {
             method: 'POST',
             body: JSON.stringify({ email, password })
         });
+
+        console.log('Login successful, data:', data);
 
         localStorage.setItem('authToken', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
@@ -343,6 +356,10 @@ async function handleLogin(e) {
         showAlert('Login successful!', 'success');
     } catch (error) {
         console.error('Login error:', error);
+        console.error('Error details:', {
+            message: error.message,
+            stack: error.stack
+        });
         showAlert(error.message || 'Network error. Please try again.', 'danger');
     }
 }
