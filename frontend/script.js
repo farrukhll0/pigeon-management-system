@@ -7,10 +7,10 @@ let filteredPigeons = [];
 // API Base URL - Environment-based configuration
 const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
 const API_BASE_URL = isProduction 
-    ? 'https://your-backend-app.onrender.com/api'  // Replace with your actual backend URL
+    ? `${window.location.origin}/api`  // Use current domain for production
     : 'http://localhost:3000/api';
 const IMAGE_BASE_URL = isProduction 
-    ? 'https://your-backend-app.onrender.com'  // Replace with your actual backend URL
+    ? window.location.origin  // Use current domain for production
     : 'http://localhost:3000';
 
 // DOM Elements
