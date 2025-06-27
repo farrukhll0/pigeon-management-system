@@ -1,4 +1,5 @@
 require('dotenv').config();
+console.log('Loaded MONGODB_URI:', process.env.MONGODB_URI ? process.env.MONGODB_URI.replace(/\/\/.*:.*@/, '//***:***@') : 'NOT SET');
 const express = require('express');
 const cors = require('cors');
 const path = require('path');

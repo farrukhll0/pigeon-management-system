@@ -251,6 +251,9 @@ async function handleLogin(e) {
     const email = document.getElementById('loginEmail').value;
     const password = document.getElementById('loginPassword').value;
 
+    console.log('Login attempt:', { email, password: '***' });
+    console.log('API URL:', `${API_BASE_URL}/auth/login`);
+
     try {
         const response = await fetch(`${API_BASE_URL}/auth/login`, {
             method: 'POST',
@@ -260,7 +263,11 @@ async function handleLogin(e) {
             body: JSON.stringify({ email, password })
         });
 
+        console.log('Response status:', response.status);
+        console.log('Response headers:', response.headers);
+
         const data = await response.json();
+        console.log('Response data:', data);
 
         if (response.ok) {
             localStorage.setItem('authToken', data.token);

@@ -9,7 +9,12 @@ const router = express.Router();
 // Middleware to ensure database connection
 const ensureDBConnection = async (req, res, next) => {
   try {
+    console.log('Ensuring database connection...');
+    console.log('MONGODB_URI exists:', !!process.env.MONGODB_URI);
+    console.log('JWT_SECRET exists:', !!process.env.JWT_SECRET);
+    
     await connectDB();
+    console.log('Database connection successful');
     next();
   } catch (error) {
     console.error('Database connection error:', error);
@@ -67,16 +72,25 @@ router.post('/signup', ensureDBConnection, async (req, res) => {
 router.post('/login', ensureDBConnection, async (req, res) => {
   try {
     const { email, password } = req.body;
+    
+    console.log('Login attempt for email:', email);
+    console.log('Request body:', { email, password: password ? '***' : 'undefined' });
 
     // Check if user exists
     const user = await User.findOne({ email });
+    console.log('User found:', user ? 'Yes' : 'No');
+    
     if (!user) {
+      console.log('User not found for email:', email);
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
     // Check password
     const isMatch = await bcrypt.compare(password, user.password);
+    console.log('Password match:', isMatch);
+    
     if (!isMatch) {
+      console.log('Password mismatch for user:', email);
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
@@ -86,6 +100,8 @@ router.post('/login', ensureDBConnection, async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
+
+    console.log('Login successful for user:', email);
 
     res.json({
       message: 'Login successful',
