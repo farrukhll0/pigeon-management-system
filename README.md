@@ -1,63 +1,47 @@
 # Pigeon Management System
 
-A clean, full-stack application for managing pigeon data.
-
-## Project Structure
-
-```
-Pegions/
-├── lib/
-│   └── db.js              # MongoDB connection
-├── models/
-│   ├── User.js            # User model
-│   └── Pigeon.js          # Pigeon model
-├── middleware/
-│   ├── auth.js            # Authentication middleware
-│   └── upload.js          # File upload middleware
-├── public/
-│   ├── index.html         # Main frontend page
-│   └── script.js          # Frontend JavaScript
-├── server.js              # Main Express server
-├── package.json           # Dependencies and scripts
-└── README.md              # This file
-```
-
-## Setup Instructions
-
-1. **Install dependencies:**
-   ```bash
-   npm install
-   ```
-
-2. **Set up environment variables:**
-   Create a `.env` file in the root directory with:
-   ```
-   MONGODB_URI=your_mongodb_connection_string
-   JWT_SECRET=your_jwt_secret_key
-   PORT=3000
-   ```
-
-3. **Run the application:**
-   ```bash
-   npm start
-   ```
-
-4. **Access the application:**
-   - Frontend: http://localhost:3000
-   - API Health Check: http://localhost:3000/api/health
+A full-stack pigeon management system with Node.js/Express backend, MongoDB, and a modern frontend. Deployable on Vercel.
 
 ## Features
+- User authentication (signup/login with JWT)
+- Pigeon CRUD operations
+- Image uploads
+- Responsive frontend
 
-- User authentication (signup/login)
-- Pigeon management (CRUD operations)
-- File upload functionality
-- MongoDB database integration
-- RESTful API endpoints
+## Getting Started
 
-## Next Steps
+### Prerequisites
+- Node.js
+- MongoDB Atlas or other MongoDB instance
 
-This is a clean setup ready for:
-- Adding new features
-- Deploying to any platform (Vercel, Heroku, etc.)
-- Customizing the frontend
-- Adding more API endpoints 
+### Environment Variables
+Create a `.env` file in your project root with:
+
+```
+MONGODB_URI=your-mongodb-connection-string
+JWT_SECRET=your-super-secret-jwt-key-here
+PORT=3000
+NODE_ENV=development
+```
+
+- **MONGODB_URI**: Your MongoDB connection string (should match your Vercel deployment)
+- **JWT_SECRET**: Any strong secret string
+
+### Local Development
+```bash
+npm install
+npm start
+```
+Visit [http://localhost:3000](http://localhost:3000)
+
+### Deployment (Vercel)
+- Set the same environment variables in your Vercel project settings.
+- Deploy via GitHub or Vercel CLI.
+
+## Troubleshooting
+- Ensure your `.env` file is named correctly and in the project root.
+- Make sure your local and Vercel `MONGODB_URI` values are identical.
+- If you change the database, delete old users to avoid password mismatch issues.
+
+## License
+MIT 
