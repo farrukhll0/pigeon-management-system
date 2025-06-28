@@ -208,8 +208,15 @@ router.post('/profile-image', auth, uploadProfileImage, async (req, res) => {
 // Debug endpoint to list users (for development only)
 router.get('/debug/users', async (req, res) => {
   try {
+    console.log('Debug users endpoint called');
+    console.log('MongoDB URI status:', process.env.MONGODB_URI ? 'Set' : 'NOT SET');
+    
     await connectDB();
+    console.log('Database connected successfully');
+    
     const users = await User.find({}).select('-password');
+    console.log('Found users:', users.length);
+    
     res.json({
       count: users.length,
       users: users.map(user => ({
@@ -221,7 +228,12 @@ router.get('/debug/users', async (req, res) => {
     });
   } catch (error) {
     console.error('Debug users error:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Error stack:', error.stack);
+    res.status(500).json({ 
+      message: 'Server error', 
+      error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 });
 
