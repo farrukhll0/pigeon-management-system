@@ -269,14 +269,14 @@ function handleImageUpload(event, previewId) {
                 console.log('✅ File read successfully, length:', e.target.result.length);
                 console.log('Preview data:', e.target.result.substring(0, 50) + '...');
                 
-                preview.innerHTML = `
-                    <div class="image-container">
-                        <img src="${e.target.result}" class="image-preview" alt="Preview">
-                        <button type="button" class="remove-image" onclick="removeImage('${event.target.id}', '${previewId}')">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                `;
+            preview.innerHTML = `
+                <div class="image-container">
+                    <img src="${e.target.result}" class="image-preview" alt="Preview">
+                    <button type="button" class="remove-image" onclick="removeImage('${event.target.id}', '${previewId}')">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
                 console.log('✅ Preview updated');
             } catch (error) {
                 console.error('❌ Error updating preview:', error);
@@ -340,19 +340,19 @@ function handleGalleryImageUpload(event) {
                 
                 reader.onload = function(e) {
                     try {
-                        previewHTML += `
-                            <div class="image-container d-inline-block me-2 mb-2">
-                                <img src="${e.target.result}" class="image-preview" alt="Gallery Preview" style="width: 80px; height: 80px;">
-                                <button type="button" class="remove-image" onclick="removeGalleryImage(${i})">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </div>
-                        `;
+                    previewHTML += `
+                        <div class="image-container d-inline-block me-2 mb-2">
+                            <img src="${e.target.result}" class="image-preview" alt="Gallery Preview" style="width: 80px; height: 80px;">
+                            <button type="button" class="remove-image" onclick="removeGalleryImage(${i})">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    `;
                         processedCount++;
                         
                         // Update preview when all images are processed
                         if (processedCount + errorCount === files.length) {
-                            preview.innerHTML = previewHTML;
+                    preview.innerHTML = previewHTML;
                         }
                     } catch (error) {
                         console.error('Error processing gallery image:', error);
@@ -411,8 +411,8 @@ function checkAuthStatus() {
     
     if (token && user) {
         try {
-            currentUser = JSON.parse(user);
-            showMainApp();
+        currentUser = JSON.parse(user);
+        showMainApp();
             
             // Load data in parallel for faster loading
             Promise.all([
@@ -582,7 +582,7 @@ async function loadPigeons() {
             showAlert('Session expired. Please login again.', 'danger');
             handleLogout();
         } else {
-            showAlert('Failed to load pigeons. Please refresh the page.', 'warning');
+        showAlert('Failed to load pigeons. Please refresh the page.', 'warning');
         }
     }
 }
@@ -711,9 +711,9 @@ async function savePigeon() {
         // Get basic form data
         const name = document.getElementById('pigeonName').value.trim();
         if (!name) {
-            showAlert('Please fill in the pigeon name', 'warning');
-            return;
-        }
+        showAlert('Please fill in the pigeon name', 'warning');
+        return;
+    }
 
         setLoadingState(true);
         const token = localStorage.getItem('authToken');
@@ -884,7 +884,7 @@ async function savePigeon() {
         } else if (error.message.includes('500')) {
             showAlert('Server error. Please try again later.', 'danger');
         } else {
-            showAlert(error.message || 'Network error. Please try again.', 'danger');
+        showAlert(error.message || 'Network error. Please try again.', 'danger');
         }
     } finally {
         setLoadingState(false);
@@ -1124,10 +1124,10 @@ function viewPigeon(pigeonId) {
                                 <div>${pedigree.greatGrandmother ? pedigree.greatGrandmother.name : 'Unknown'}</div>
                             </div>
                         </div>
+                            </div>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
-        </div>
     `;
     
     // Show the modal
@@ -1217,7 +1217,7 @@ function showAlert(message, type) {
         <div id="${alertId}" class="alert alert-${type} alert-dismissible fade show" role="alert">
             ${message}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
+                            </div>
     `;
     
     alertContainer.innerHTML = alertHTML;
@@ -1369,14 +1369,14 @@ function editPigeon(pigeonId) {
     // Show images if they exist
     if (pigeon.pigeonImage) {
         document.getElementById('pigeonImagePreview').innerHTML = `
-            <div class="image-container">
+                <div class="image-container">
                 <img src="${pigeon.pigeonImage}" class="image-preview" alt="Pigeon Preview">
                 <button type="button" class="remove-image" onclick="removeImage('pigeonImageInput', 'pigeonImagePreview')">
                     <i class="fas fa-times"></i>
                 </button>
-            </div>
-        `;
-    }
+                </div>
+            `;
+        }
     
     if (pigeon.fatherImage) {
         document.getElementById('fatherImagePreview').innerHTML = `
@@ -1413,7 +1413,7 @@ async function deletePigeon(pigeonId) {
     if (!confirm('Are you sure you want to delete this pigeon?')) {
         return;
     }
-    
+
     try {
         const token = localStorage.getItem('authToken');
         await apiFetch(`${API_BASE_URL}/pigeons/${pigeonId}`, {
@@ -1422,7 +1422,7 @@ async function deletePigeon(pigeonId) {
                 'Authorization': `Bearer ${token}`
             }
         });
-        
+
         // Remove from local arrays
         pigeons = pigeons.filter(p => p._id !== pigeonId);
         filteredPigeons = filteredPigeons.filter(p => p._id !== pigeonId);
@@ -1433,4 +1433,4 @@ async function deletePigeon(pigeonId) {
         console.error('Error deleting pigeon:', error);
         showAlert(error.message || 'Failed to delete pigeon', 'danger');
     }
-}
+} 
