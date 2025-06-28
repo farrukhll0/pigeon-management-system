@@ -584,34 +584,92 @@ function renderPigeons() {
 
 // Save pigeon (create or update)
 async function savePigeon() {
-    const formData = getPigeonFormData();
-    
-    if (!formData.get('name')) {
-        showAlert('Please fill in the pigeon name', 'warning');
-        return;
-    }
-
-    if (isLoading) return; // Prevent multiple submissions
-
     try {
+        if (isLoading) return; // Prevent multiple submissions
+
+        // Get basic form data
+        const name = document.getElementById('pigeonName').value.trim();
+        if (!name) {
+            showAlert('Please fill in the pigeon name', 'warning');
+            return;
+        }
+
         setLoadingState(true);
         const token = localStorage.getItem('authToken');
+
+        // Upload images first and get base64 data
+        const imageData = {
+            pigeonImage: '',
+            fatherImage: '',
+            motherImage: ''
+        };
+
+        const imageInputs = [
+            { id: 'pigeonImageInput', field: 'pigeonImage' },
+            { id: 'fatherImageInput', field: 'fatherImage' },
+            { id: 'motherImageInput', field: 'motherImage' }
+        ];
+
+        console.log('Uploading images...');
+        
+        for (const input of imageInputs) {
+            const fileInput = document.getElementById(input.id);
+            if (fileInput && fileInput.files[0]) {
+                console.log(`Uploading ${input.field}:`, fileInput.files[0].name);
+                
+                const formData = new FormData();
+                formData.append('image', fileInput.files[0]);
+                
+                try {
+                    const response = await apiFetch(`${API_BASE_URL}/pigeons/upload-image`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: formData
+                    });
+                    
+                    imageData[input.field] = response.imageData;
+                    console.log(`${input.field} uploaded successfully`);
+                } catch (error) {
+                    console.error(`Error uploading ${input.field}:`, error);
+                    showAlert(`Failed to upload ${input.field}`, 'warning');
+                }
+            }
+        }
+
+        // Create pigeon with image data
+        const pigeonData = {
+            name: name,
+            ringNumber: document.getElementById('ringNumber').value.trim(),
+            dateOfBirth: document.getElementById('dateOfBirth').value,
+            color: document.getElementById('color').value.trim(),
+            sex: document.getElementById('sex').value,
+            strain: document.getElementById('strain').value.trim(),
+            breeder: document.getElementById('breeder').value.trim(),
+            notes: document.getElementById('notes').value.trim(),
+            fatherName: document.getElementById('fatherName').value.trim(),
+            motherName: document.getElementById('motherName').value.trim(),
+            pigeonImage: imageData.pigeonImage,
+            fatherImage: imageData.fatherImage,
+            motherImage: imageData.motherImage
+        };
+
+        console.log('Creating pigeon with data:', pigeonData);
+
         const url = editingPigeonId 
             ? `${API_BASE_URL}/pigeons/${editingPigeonId}`
             : `${API_BASE_URL}/pigeons`;
         
         const method = editingPigeonId ? 'PUT' : 'POST';
 
-        console.log('Sending pigeon data to:', url);
-        console.log('Method:', method);
-        console.log('FormData has files:', formData.has('pigeonImage'), formData.has('fatherImage'), formData.has('motherImage'));
-
         const savedPigeon = await apiFetch(url, {
             method: method,
             headers: {
-                'Authorization': `Bearer ${token}`
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
             },
-            body: formData
+            body: JSON.stringify(pigeonData)
         });
         
         console.log('Pigeon saved successfully:', savedPigeon);

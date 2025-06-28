@@ -2,7 +2,7 @@ const express = require('express');
 const Pigeon = require('../models/Pigeon');
 const { auth } = require('../middleware/auth');
 const connectDB = require('../lib/db');
-const { uploadPigeonImages } = require('../middleware/upload');
+const { uploadPigeonImages, uploadSingle } = require('../middleware/upload');
 const router = express.Router();
 
 // Get all pigeons for the authenticated user
@@ -39,47 +39,44 @@ router.get('/:id', auth, async (req, res) => {
   }
 });
 
+// Upload image and return base64 data URL
+router.post('/upload-image', auth, uploadSingle, async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No image file provided' });
+    }
+
+    const file = req.file;
+    console.log('Image uploaded:', file.originalname, file.mimetype, file.size);
+
+    // Convert to base64
+    const base64Data = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
+
+    res.json({
+      message: 'Image uploaded successfully',
+      imageData: base64Data,
+      filename: file.originalname,
+      size: file.size,
+      type: file.mimetype
+    });
+  } catch (error) {
+    console.error('Image upload error:', error);
+    res.status(500).json({ message: 'Image upload failed' });
+  }
+});
+
 // Create new pigeon
-router.post('/', auth, uploadPigeonImages, async (req, res) => {
+router.post('/', auth, async (req, res) => {
   try {
     await connectDB();
-    const { name, ringNumber, dateOfBirth, color, sex, strain, breeder, notes, fatherName, motherName } = req.body;
     
     console.log('Pigeon creation request received');
-    console.log('Files received:', req.files ? Object.keys(req.files) : 'No files');
-    console.log('Body received:', req.body);
+    console.log('Request body:', req.body);
     
-    // Process uploaded images with better error handling
-    let pigeonImage = '';
-    let fatherImage = '';
-    let motherImage = '';
-    
-    try {
-      if (req.files) {
-        console.log('Processing files:', req.files);
-        
-        if (req.files.pigeonImage && req.files.pigeonImage[0]) {
-          const file = req.files.pigeonImage[0];
-          console.log('Pigeon image file:', file.originalname, file.mimetype, file.size);
-          pigeonImage = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
-        }
-        if (req.files.fatherImage && req.files.fatherImage[0]) {
-          const file = req.files.fatherImage[0];
-          console.log('Father image file:', file.originalname, file.mimetype, file.size);
-          fatherImage = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
-        }
-        if (req.files.motherImage && req.files.motherImage[0]) {
-          const file = req.files.motherImage[0];
-          console.log('Mother image file:', file.originalname, file.mimetype, file.size);
-          motherImage = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
-        }
-      } else {
-        console.log('No files received in request');
-      }
-    } catch (fileError) {
-      console.error('File processing error:', fileError);
-      // Continue without images if file processing fails
-    }
+    const { 
+      name, ringNumber, dateOfBirth, color, sex, strain, breeder, notes, 
+      fatherName, motherName, pigeonImage, fatherImage, motherImage 
+    } = req.body;
 
     if (!name) {
       return res.status(400).json({ message: 'Pigeon name is required.' });
@@ -99,16 +96,17 @@ router.post('/', auth, uploadPigeonImages, async (req, res) => {
       notes,
       fatherName,
       motherName,
-      pigeonImage,
-      fatherImage,
-      motherImage,
+      pigeonImage: pigeonImage || '',
+      fatherImage: fatherImage || '',
+      motherImage: motherImage || '',
       user: req.user.id
     });
 
-    console.log('Saving pigeon with images:', {
-      hasPigeonImage: !!pigeonImage,
-      hasFatherImage: !!fatherImage,
-      hasMotherImage: !!motherImage
+    console.log('Saving pigeon:', pigeon.name);
+    console.log('Has images:', {
+      pigeonImage: !!pigeonImage,
+      fatherImage: !!fatherImage,
+      motherImage: !!motherImage
     });
 
     await pigeon.save();
