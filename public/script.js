@@ -706,6 +706,8 @@ async function savePigeon() {
     try {
         if (isLoading) return; // Prevent multiple submissions
     
+        console.log('=== SAVE PIGEON FUNCTION STARTED ===');
+        
         // Get basic form data
         const name = document.getElementById('pigeonName').value.trim();
         if (!name) {
@@ -736,14 +738,16 @@ async function savePigeon() {
         ];
 
         console.log('=== IMAGE UPLOAD DEBUG ===');
+        console.log('Image inputs to check:', imageInputs);
         
         for (const input of imageInputs) {
             const fileInput = document.getElementById(input.id);
-            console.log(`Checking ${input.id}:`, fileInput);
+            console.log(`\n--- Checking ${input.id} ---`);
+            console.log('File input element:', fileInput);
             
             if (fileInput && fileInput.files[0]) {
                 const file = fileInput.files[0];
-                console.log(`File found for ${input.field}:`, {
+                console.log(`✅ File found for ${input.field}:`, {
                     name: file.name,
                     size: file.size,
                     type: file.type,
@@ -752,31 +756,43 @@ async function savePigeon() {
                 
                 // Validate file type
                 if (!file.type.startsWith('image/')) {
-                    console.error(`Invalid file type for ${input.field}:`, file.type);
+                    console.error(`❌ Invalid file type for ${input.field}:`, file.type);
                     showAlert(`Please select a valid image file for ${input.field}`, 'warning');
+                    continue;
+                }
+                
+                // Validate file size
+                if (file.size > 5 * 1024 * 1024) {
+                    console.error(`❌ File too large for ${input.field}:`, file.size, 'bytes');
+                    showAlert(`Image for ${input.field} is too large. Must be less than 5MB.`, 'warning');
                     continue;
                 }
                 
                 // Convert file to base64
                 try {
+                    console.log(`🔄 Converting ${input.field} to base64...`);
                     const base64 = await fileToBase64(file);
-                    console.log(`${input.field} base64 length:`, base64.length);
-                    console.log(`${input.field} base64 preview:`, base64.substring(0, 50) + '...');
+                    console.log(`✅ ${input.field} base64 length:`, base64.length);
+                    console.log(`✅ ${input.field} base64 preview:`, base64.substring(0, 50) + '...');
                     imageData[input.field] = base64;
-                    console.log(`${input.field} converted successfully`);
+                    console.log(`✅ ${input.field} converted successfully`);
                 } catch (error) {
-                    console.error(`Error converting ${input.field}:`, error);
-                    showAlert(`Failed to process ${input.field}`, 'warning');
+                    console.error(`❌ Error converting ${input.field}:`, error);
+                    showAlert(`Failed to process ${input.field}: ${error.message}`, 'warning');
                 }
             } else {
-                console.log(`No file selected for ${input.field}`);
+                console.log(`ℹ️ No file selected for ${input.field}`);
             }
         }
 
-        console.log('Final image data:', {
+        console.log('\n=== FINAL IMAGE DATA ===');
+        console.log('Image data summary:', {
             hasPigeonImage: !!imageData.pigeonImage,
             hasFatherImage: !!imageData.fatherImage,
-            hasMotherImage: !!imageData.motherImage
+            hasMotherImage: !!imageData.motherImage,
+            pigeonImageLength: imageData.pigeonImage.length,
+            fatherImageLength: imageData.fatherImage.length,
+            motherImageLength: imageData.motherImage.length
         });
 
         // Create pigeon with image data
@@ -796,7 +812,8 @@ async function savePigeon() {
             motherImage: imageData.motherImage
         };
 
-        console.log('Creating pigeon with data:', {
+        console.log('\n=== PIGEON DATA TO SEND ===');
+        console.log('Pigeon data summary:', {
             name: pigeonData.name,
             hasPigeonImage: !!pigeonData.pigeonImage,
             hasFatherImage: !!pigeonData.fatherImage,
@@ -809,6 +826,11 @@ async function savePigeon() {
         
         const method = editingPigeonId ? 'PUT' : 'POST';
 
+        console.log(`\n=== SENDING REQUEST ===`);
+        console.log('URL:', url);
+        console.log('Method:', method);
+        console.log('Token exists:', !!token);
+
         const savedPigeon = await apiFetch(url, {
             method: method,
             headers: {
@@ -818,6 +840,7 @@ async function savePigeon() {
             body: JSON.stringify(pigeonData)
         });
         
+        console.log('\n=== RESPONSE RECEIVED ===');
         console.log('Pigeon saved successfully:', savedPigeon);
         console.log('Saved pigeon images:', {
             hasPigeonImage: !!savedPigeon.pigeonImage,
@@ -844,8 +867,13 @@ async function savePigeon() {
         
         showAlert(editingPigeonId ? 'Pigeon updated successfully!' : 'Pigeon added successfully!', 'success');
         editingPigeonId = null;
+        
+        console.log('=== SAVE PIGEON FUNCTION COMPLETED ===');
     } catch (error) {
+        console.error('\n=== SAVE PIGEON ERROR ===');
         console.error('Error saving pigeon:', error);
+        console.error('Error message:', error.message);
+        console.error('Error stack:', error.stack);
         
         // Handle specific error types
         if (error.message.includes('401') || error.message.includes('Unauthorized')) {

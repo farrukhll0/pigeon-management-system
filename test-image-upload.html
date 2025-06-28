@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Upload Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 20px; border: 1px solid #ccc; }
+        .preview { max-width: 200px; max-height: 200px; margin: 10px 0; }
+        .result { background: #f0f0f0; padding: 10px; margin: 10px 0; }
+        button { padding: 10px 20px; margin: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Image Upload Test</h1>
+    
+    <div class="test-section">
+        <h3>Test 1: File to Base64 Conversion</h3>
+        <input type="file" id="testFile" accept="image/*">
+        <button onclick="testFileToBase64()">Convert to Base64</button>
+        <div id="base64Result" class="result"></div>
+        <img id="base64Preview" class="preview" style="display: none;">
+    </div>
+    
+    <div class="test-section">
+        <h3>Test 2: Image Preview</h3>
+        <input type="file" id="previewFile" accept="image/*">
+        <div id="previewResult" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Test 3: File Validation</h3>
+        <input type="file" id="validateFile" accept="image/*">
+        <button onclick="validateFile()">Validate File</button>
+        <div id="validateResult" class="result"></div>
+    </div>
+
+    <script>
+        // Test 1: File to Base64
+        async function testFileToBase64() {
+            const fileInput = document.getElementById('testFile');
+            const resultDiv = document.getElementById('base64Result');
+            const previewImg = document.getElementById('base64Preview');
+            
+            if (!fileInput.files[0]) {
+                resultDiv.innerHTML = 'Please select a file first';
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            console.log('File details:', {
+                name: file.name,
+                size: file.size,
+                type: file.type
+            });
+            
+            try {
+                const base64 = await fileToBase64(file);
+                resultDiv.innerHTML = `
+                    <strong>Success!</strong><br>
+                    File: ${file.name}<br>
+                    Size: ${file.size} bytes<br>
+                    Type: ${file.type}<br>
+                    Base64 length: ${base64.length}<br>
+                    Base64 preview: ${base64.substring(0, 50)}...
+                `;
+                
+                previewImg.src = base64;
+                previewImg.style.display = 'block';
+            } catch (error) {
+                resultDiv.innerHTML = `<strong>Error:</strong> ${error.message}`;
+                console.error('Error:', error);
+            }
+        }
+        
+        // Test 2: Image Preview
+        document.getElementById('previewFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const resultDiv = document.getElementById('previewResult');
+            
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    resultDiv.innerHTML = `
+                        <strong>Preview Generated!</strong><br>
+                        <img src="${e.target.result}" class="preview" alt="Preview">
+                    `;
+                };
+                reader.readAsDataURL(file);
+            } else {
+                resultDiv.innerHTML = 'Please select a valid image file';
+            }
+        });
+        
+        // Test 3: File Validation
+        function validateFile() {
+            const fileInput = document.getElementById('validateFile');
+            const resultDiv = document.getElementById('validateResult');
+            
+            if (!fileInput.files[0]) {
+                resultDiv.innerHTML = 'Please select a file first';
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            const maxSize = 5 * 1024 * 1024; // 5MB
+            
+            let isValid = true;
+            let errors = [];
+            
+            // Check file type
+            if (!file.type.startsWith('image/')) {
+                isValid = false;
+                errors.push('Not an image file');
+            }
+            
+            // Check file size
+            if (file.size > maxSize) {
+                isValid = false;
+                errors.push('File too large (max 5MB)');
+            }
+            
+            // Check if file is empty
+            if (file.size === 0) {
+                isValid = false;
+                errors.push('File is empty');
+            }
+            
+            resultDiv.innerHTML = `
+                <strong>Validation Result:</strong> ${isValid ? 'PASS' : 'FAIL'}<br>
+                File: ${file.name}<br>
+                Size: ${file.size} bytes<br>
+                Type: ${file.type}<br>
+                ${errors.length > 0 ? '<strong>Errors:</strong><br>' + errors.join('<br>') : ''}
+            `;
+        }
+        
+        // Helper function to convert file to base64
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
+        }
+    </script>
+</body>
+</html> 
