@@ -536,7 +536,7 @@ function renderPigeons() {
         <div class="col-md-6 col-lg-4 mb-4">
             <div class="card pigeon-card bg-white bg-opacity-90 h-100">
                 ${pigeon.pigeonImage ? 
-                    `<img src="${IMAGE_BASE_URL}${pigeon.pigeonImage}" class="pigeon-image" alt="${pigeon.name}">` : 
+                    `<img src="${pigeon.pigeonImage}" class="pigeon-image" alt="${pigeon.name}">` : 
                     `<div class="pigeon-image bg-light d-flex align-items-center justify-content-center">
                         <i class="fas fa-dove fa-3x text-muted"></i>
                     </div>`
@@ -555,12 +555,12 @@ function renderPigeons() {
                             ${pigeon.strain ? `<div class="mb-1"><i class="fas fa-tag me-1"></i>${pigeon.strain}</div>` : ''}
                             <div class="d-flex align-items-center mb-1">
                                 <i class="fas fa-male me-2"></i>
-                                ${pigeon.fatherImage ? `<img src="${IMAGE_BASE_URL}${pigeon.fatherImage}" class="family-image me-2" alt="Father">` : ''}
+                                ${pigeon.fatherImage ? `<img src="${pigeon.fatherImage}" class="family-image me-2" alt="Father">` : ''}
                                 Father: ${pigeon.fatherName || 'Unknown'}
                             </div>
                             <div class="d-flex align-items-center">
                                 <i class="fas fa-female me-2"></i>
-                                ${pigeon.motherImage ? `<img src="${IMAGE_BASE_URL}${pigeon.motherImage}" class="family-image me-2" alt="Mother">` : ''}
+                                ${pigeon.motherImage ? `<img src="${pigeon.motherImage}" class="family-image me-2" alt="Mother">` : ''}
                                 Mother: ${pigeon.motherName || 'Unknown'}
                             </div>
                         </small>
@@ -708,7 +708,7 @@ function viewPigeon(pigeonId) {
         <div class="row mb-4">
             <div class="col-12">
                 ${pigeon.pigeonImage ? 
-                    `<img src="${IMAGE_BASE_URL}${pigeon.pigeonImage}" class="pigeon-main-image" alt="${pigeon.name}">` : 
+                    `<img src="${pigeon.pigeonImage}" class="pigeon-main-image" alt="${pigeon.name}">` : 
                     '<div class="pigeon-main-image-placeholder"><i class="fas fa-dove"></i></div>'
                 }
             </div>
@@ -774,7 +774,7 @@ function viewPigeon(pigeonId) {
                     <h6><i class="fas fa-users me-2"></i>Family Information</h6>
                     <div class="family-member">
                         ${pigeon.fatherImage ? 
-                            `<img src="${IMAGE_BASE_URL}${pigeon.fatherImage}" class="family-member-image" alt="Father">` : 
+                            `<img src="${pigeon.fatherImage}" class="family-member-image" alt="Father">` : 
                             '<div class="family-member-image bg-light d-flex align-items-center justify-content-center"><i class="fas fa-male text-muted"></i></div>'
                         }
                         <div class="family-member-info">
@@ -784,7 +784,7 @@ function viewPigeon(pigeonId) {
                     </div>
                     <div class="family-member">
                         ${pigeon.motherImage ? 
-                            `<img src="${IMAGE_BASE_URL}${pigeon.motherImage}" class="family-member-image" alt="Mother">` : 
+                            `<img src="${pigeon.motherImage}" class="family-member-image" alt="Mother">` : 
                             '<div class="family-member-image bg-light d-flex align-items-center justify-content-center"><i class="fas fa-female text-muted"></i></div>'
                         }
                         <div class="family-member-info">
@@ -806,7 +806,7 @@ function viewPigeon(pigeonId) {
                             <div class="pedigree-item-enhanced">
                                 <strong>Great-Great-Grandfather</strong>
                                 ${pedigree.greatGreatGrandfather && pedigree.greatGreatGrandfather.image ? 
-                                    `<img src="${IMAGE_BASE_URL}${pedigree.greatGreatGrandfather.image}" class="pedigree-image-enhanced" alt="GGG Father">` : 
+                                    `<img src="${pedigree.greatGreatGrandfather.image}" class="pedigree-image-enhanced" alt="GGG Father">` : 
                                     '<div class="pedigree-image-enhanced bg-light d-flex align-items-center justify-content-center"><i class="fas fa-user text-muted"></i></div>'
                                 }
                                 <div>${pedigree.greatGreatGrandfather ? pedigree.greatGreatGrandfather.name : 'Unknown'}</div>
@@ -814,7 +814,7 @@ function viewPigeon(pigeonId) {
                             <div class="pedigree-item-enhanced">
                                 <strong>Great-Great-Grandmother</strong>
                                 ${pedigree.greatGreatGrandmother && pedigree.greatGreatGrandmother.image ? 
-                                    `<img src="${IMAGE_BASE_URL}${pedigree.greatGreatGrandmother.image}" class="pedigree-image-enhanced" alt="GGG Mother">` : 
+                                    `<img src="${pedigree.greatGreatGrandmother.image}" class="pedigree-image-enhanced" alt="GGG Mother">` : 
                                     '<div class="pedigree-image-enhanced bg-light d-flex align-items-center justify-content-center"><i class="fas fa-user text-muted"></i></div>'
                                 }
                                 <div>${pedigree.greatGreatGrandmother ? pedigree.greatGreatGrandmother.name : 'Unknown'}</div>
@@ -824,7 +824,7 @@ function viewPigeon(pigeonId) {
                             <div class="pedigree-item-enhanced">
                                 <strong>Great-Grandfather</strong>
                                 ${pedigree.greatGrandfather && pedigree.greatGrandfather.image ? 
-                                    `<img src="${IMAGE_BASE_URL}${pedigree.greatGrandfather.image}" class="pedigree-image-enhanced" alt="GG Father">` : 
+                                    `<img src="${pedigree.greatGrandfather.image}" class="pedigree-image-enhanced" alt="GG Father">` : 
                                     '<div class="pedigree-image-enhanced bg-light d-flex align-items-center justify-content-center"><i class="fas fa-user text-muted"></i></div>'
                                 }
                                 <div>${pedigree.greatGrandfather ? pedigree.greatGrandfather.name : 'Unknown'}</div>
@@ -832,7 +832,7 @@ function viewPigeon(pigeonId) {
                             <div class="pedigree-item-enhanced">
                                 <strong>Great-Grandmother</strong>
                                 ${pedigree.greatGrandmother && pedigree.greatGrandmother.image ? 
-                                    `<img src="${IMAGE_BASE_URL}${pedigree.greatGrandmother.image}" class="pedigree-image-enhanced" alt="GG Mother">` : 
+                                    `<img src="${pedigree.greatGrandmother.image}" class="pedigree-image-enhanced" alt="GG Mother">` : 
                                     '<div class="pedigree-image-enhanced bg-light d-flex align-items-center justify-content-center"><i class="fas fa-user text-muted"></i></div>'
                                 }
                                 <div>${pedigree.greatGrandmother ? pedigree.greatGrandmother.name : 'Unknown'}</div>
@@ -910,7 +910,7 @@ async function loadUserProfile() {
         
         if (user.profileImage) {
             document.getElementById('profileImagePreview').innerHTML = 
-                `<img src="${IMAGE_BASE_URL}${user.profileImage}" class="rounded-circle" style="width: 100px; height: 100px; object-fit: cover;">`;
+                `<img src="${user.profileImage}" class="rounded-circle" style="width: 100px; height: 100px; object-fit: cover;">`;
         }
     } catch (error) {
         // Silently fail - profile loading is not critical

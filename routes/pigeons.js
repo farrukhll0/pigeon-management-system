@@ -53,13 +53,16 @@ router.post('/', auth, uploadPigeonImages, async (req, res) => {
     try {
       if (req.files) {
         if (req.files.pigeonImage && req.files.pigeonImage[0]) {
-          pigeonImage = req.files.pigeonImage[0].originalname;
+          const file = req.files.pigeonImage[0];
+          pigeonImage = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
         }
         if (req.files.fatherImage && req.files.fatherImage[0]) {
-          fatherImage = req.files.fatherImage[0].originalname;
+          const file = req.files.fatherImage[0];
+          fatherImage = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
         }
         if (req.files.motherImage && req.files.motherImage[0]) {
-          motherImage = req.files.motherImage[0].originalname;
+          const file = req.files.motherImage[0];
+          motherImage = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
         }
       }
     } catch (fileError) {

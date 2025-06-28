@@ -156,8 +156,8 @@ router.post('/profile-image', auth, uploadProfileImage, async (req, res) => {
       return res.status(400).json({ message: 'No image file provided' });
     }
     
-    // For now, we'll store the filename (in production, you'd upload to cloud storage)
-    const profileImage = req.file.originalname;
+    // Convert image to base64 for storage
+    const profileImage = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
     
     const user = await User.findByIdAndUpdate(
       req.user.id,
