@@ -53,25 +53,43 @@ router.post('/signup', async (req, res) => {
 // Login user
 router.post('/login', async (req, res) => {
   try {
+    console.log('Login request received:', {
+      body: req.body,
+      headers: req.headers,
+      method: req.method,
+      url: req.url
+    });
+
     await connectDB();
     const { email, password } = req.body;
 
+    console.log('Extracted credentials:', { email: email ? 'provided' : 'missing', password: password ? 'provided' : 'missing' });
+
     // Validate input
     if (!email || !password) {
+      console.log('Validation failed: missing email or password');
       return res.status(400).json({ message: 'Email and password are required' });
     }
 
     // Check if user exists - only select necessary fields for faster query
+    console.log('Searching for user with email:', email);
     const user = await User.findOne({ email }).select('+password');
+    
     if (!user) {
+      console.log('User not found for email:', email);
       return res.status(400).json({ message: 'Invalid credentials' });
     }
+
+    console.log('User found, checking password...');
 
     // Check password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
+      console.log('Password mismatch for user:', email);
       return res.status(400).json({ message: 'Invalid credentials' });
     }
+
+    console.log('Password verified, creating JWT token...');
 
     // Create JWT token
     const token = jwt.sign(
@@ -79,6 +97,8 @@ router.post('/login', async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
+
+    console.log('Login successful for user:', email);
 
     res.json({
       message: 'Login successful',
@@ -91,6 +111,7 @@ router.post('/login', async (req, res) => {
     });
   } catch (error) {
     console.error('Login error:', error);
+    console.error('Error stack:', error.stack);
     res.status(500).json({ message: 'Server error' });
   }
 });

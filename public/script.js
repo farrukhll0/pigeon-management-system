@@ -419,6 +419,8 @@ async function handleLogin(e) {
     const email = document.getElementById('loginEmail').value;
     const password = document.getElementById('loginPassword').value;
 
+    console.log('Login attempt with:', { email, password: password ? 'provided' : 'missing' });
+
     // Show loading state
     const loginBtn = document.querySelector('#loginFormElement button[type="submit"]');
     const originalText = loginBtn.innerHTML;
@@ -426,10 +428,16 @@ async function handleLogin(e) {
     loginBtn.innerHTML = '<span class="loading-spinner"></span> Logging in...';
 
     try {
+        const requestBody = { email, password };
+        console.log('Sending login request to:', `${API_BASE_URL}/auth/login`);
+        console.log('Request body:', requestBody);
+
         const data = await apiFetch(`${API_BASE_URL}/auth/login`, {
             method: 'POST',
-            body: JSON.stringify({ email, password })
+            body: JSON.stringify(requestBody)
         });
+
+        console.log('Login response received:', data);
 
         localStorage.setItem('authToken', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
@@ -446,6 +454,7 @@ async function handleLogin(e) {
         
         showAlert('Login successful!', 'success');
     } catch (error) {
+        console.error('Login error:', error);
         showAlert(error.message || 'Network error. Please try again.', 'danger');
     } finally {
         // Reset button state
