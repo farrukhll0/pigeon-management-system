@@ -243,6 +243,11 @@ function handleImageUpload(event, previewId) {
     console.log('File:', file);
     console.log('Preview element:', preview);
     
+    if (!preview) {
+        console.error('Preview element not found:', previewId);
+        return;
+    }
+    
     if (file && file.type.startsWith('image/')) {
         console.log('✅ Valid image file detected:', {
             name: file.name,
@@ -258,24 +263,31 @@ function handleImageUpload(event, previewId) {
         }
         
         const reader = new FileReader();
+        
         reader.onload = function(e) {
-            console.log('✅ File read successfully, length:', e.target.result.length);
-            console.log('Preview data:', e.target.result.substring(0, 50) + '...');
-            
-            preview.innerHTML = `
-                <div class="image-container">
-                    <img src="${e.target.result}" class="image-preview" alt="Preview">
-                    <button type="button" class="remove-image" onclick="removeImage('${event.target.id}', '${previewId}')">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-            `;
-            console.log('✅ Preview updated');
+            try {
+                console.log('✅ File read successfully, length:', e.target.result.length);
+                console.log('Preview data:', e.target.result.substring(0, 50) + '...');
+                
+                preview.innerHTML = `
+                    <div class="image-container">
+                        <img src="${e.target.result}" class="image-preview" alt="Preview">
+                        <button type="button" class="remove-image" onclick="removeImage('${event.target.id}', '${previewId}')">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+                console.log('✅ Preview updated');
+            } catch (error) {
+                console.error('❌ Error updating preview:', error);
+                showAlert('Error displaying image preview', 'danger');
+            }
         };
         
         reader.onerror = function(error) {
             console.error('❌ Error reading file:', error);
             showAlert('Error reading image file', 'danger');
+            event.target.value = '';
         };
         
         reader.readAsDataURL(file);
@@ -293,6 +305,11 @@ function handleImageUpload(event, previewId) {
 function handleGalleryImageUpload(event) {
     const files = event.target.files;
     const preview = document.getElementById('galleryImagesPreview');
+    
+    if (!preview) {
+        console.error('Gallery preview element not found');
+        return;
+    }
     
     if (files && files.length > 0) {
         // Check total file size
@@ -314,28 +331,52 @@ function handleGalleryImageUpload(event) {
         
         let previewHTML = '';
         let processedCount = 0;
+        let errorCount = 0;
         
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
             if (file.type.startsWith('image/')) {
                 const reader = new FileReader();
+                
                 reader.onload = function(e) {
-                    previewHTML += `
-                        <div class="image-container d-inline-block me-2 mb-2">
-                            <img src="${e.target.result}" class="image-preview" alt="Gallery Preview" style="width: 80px; height: 80px;">
-                            <button type="button" class="remove-image" onclick="removeGalleryImage(${i})">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                    `;
-                    processedCount++;
-                    
-                    // Update preview when all images are processed
-                    if (processedCount === files.length) {
+                    try {
+                        previewHTML += `
+                            <div class="image-container d-inline-block me-2 mb-2">
+                                <img src="${e.target.result}" class="image-preview" alt="Gallery Preview" style="width: 80px; height: 80px;">
+                                <button type="button" class="remove-image" onclick="removeGalleryImage(${i})">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        `;
+                        processedCount++;
+                        
+                        // Update preview when all images are processed
+                        if (processedCount + errorCount === files.length) {
+                            preview.innerHTML = previewHTML;
+                        }
+                    } catch (error) {
+                        console.error('Error processing gallery image:', error);
+                        errorCount++;
+                        if (processedCount + errorCount === files.length) {
+                            preview.innerHTML = previewHTML;
+                        }
+                    }
+                };
+                
+                reader.onerror = function(error) {
+                    console.error('Error reading gallery image:', error);
+                    errorCount++;
+                    if (processedCount + errorCount === files.length) {
                         preview.innerHTML = previewHTML;
                     }
                 };
+                
                 reader.readAsDataURL(file);
+            } else {
+                errorCount++;
+                if (processedCount + errorCount === files.length) {
+                    preview.innerHTML = previewHTML;
+                }
             }
         }
     }
@@ -519,6 +560,12 @@ function handleLogout() {
 async function loadPigeons() {
     try {
         const token = localStorage.getItem('authToken');
+        
+        if (!token) {
+            console.error('No auth token found');
+            return;
+        }
+        
         const pigeons = await apiFetch(`${API_BASE_URL}/pigeons`, {
             headers: {
                 'Authorization': `Bearer ${token}`
@@ -529,7 +576,14 @@ async function loadPigeons() {
         filteredPigeons = [...pigeons];
         renderPigeons();
     } catch (error) {
-        showAlert('Failed to load pigeons. Please refresh the page.', 'warning');
+        console.error('Error loading pigeons:', error);
+        
+        if (error.message.includes('401') || error.message.includes('Unauthorized')) {
+            showAlert('Session expired. Please login again.', 'danger');
+            handleLogout();
+        } else {
+            showAlert('Failed to load pigeons. Please refresh the page.', 'warning');
+        }
     }
 }
 
@@ -651,7 +705,7 @@ function renderPigeons() {
 async function savePigeon() {
     try {
         if (isLoading) return; // Prevent multiple submissions
-
+    
         // Get basic form data
         const name = document.getElementById('pigeonName').value.trim();
         if (!name) {
@@ -661,6 +715,12 @@ async function savePigeon() {
 
         setLoadingState(true);
         const token = localStorage.getItem('authToken');
+        
+        if (!token) {
+            showAlert('Authentication required. Please login again.', 'danger');
+            handleLogout();
+            return;
+        }
 
         // Convert images to base64 directly in frontend
         const imageData = {
@@ -776,12 +836,28 @@ async function savePigeon() {
         
         filteredPigeons = [...pigeons];
         renderPigeons();
-        bootstrap.Modal.getInstance(document.getElementById('addPigeonModal')).hide();
+        
+        const modal = bootstrap.Modal.getInstance(document.getElementById('addPigeonModal'));
+        if (modal) {
+            modal.hide();
+        }
+        
         showAlert(editingPigeonId ? 'Pigeon updated successfully!' : 'Pigeon added successfully!', 'success');
         editingPigeonId = null;
     } catch (error) {
         console.error('Error saving pigeon:', error);
-        showAlert(error.message || 'Network error. Please try again.', 'danger');
+        
+        // Handle specific error types
+        if (error.message.includes('401') || error.message.includes('Unauthorized')) {
+            showAlert('Session expired. Please login again.', 'danger');
+            handleLogout();
+        } else if (error.message.includes('400')) {
+            showAlert('Invalid data. Please check your input.', 'warning');
+        } else if (error.message.includes('500')) {
+            showAlert('Server error. Please try again later.', 'danger');
+        } else {
+            showAlert(error.message || 'Network error. Please try again.', 'danger');
+        }
     } finally {
         setLoadingState(false);
     }
