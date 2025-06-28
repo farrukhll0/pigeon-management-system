@@ -597,7 +597,7 @@ async function savePigeon() {
         setLoadingState(true);
         const token = localStorage.getItem('authToken');
 
-        // Upload images first and get base64 data
+        // Convert images to base64 directly in frontend
         const imageData = {
             pigeonImage: '',
             fatherImage: '',
@@ -610,31 +610,18 @@ async function savePigeon() {
             { id: 'motherImageInput', field: 'motherImage' }
         ];
 
-        console.log('Uploading images...');
+        console.log('Processing images...');
         
         for (const input of imageInputs) {
             const fileInput = document.getElementById(input.id);
             if (fileInput && fileInput.files[0]) {
-                console.log(`Uploading ${input.field}:`, fileInput.files[0].name);
+                const file = fileInput.files[0];
+                console.log(`Processing ${input.field}:`, file.name, file.size, file.type);
                 
-                const formData = new FormData();
-                formData.append('image', fileInput.files[0]);
-                
-                try {
-                    const response = await apiFetch(`${API_BASE_URL}/pigeons/upload-image`, {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${token}`
-                        },
-                        body: formData
-                    });
-                    
-                    imageData[input.field] = response.imageData;
-                    console.log(`${input.field} uploaded successfully`);
-                } catch (error) {
-                    console.error(`Error uploading ${input.field}:`, error);
-                    showAlert(`Failed to upload ${input.field}`, 'warning');
-                }
+                // Convert file to base64
+                const base64 = await fileToBase64(file);
+                imageData[input.field] = base64;
+                console.log(`${input.field} converted to base64`);
             }
         }
 
@@ -655,7 +642,12 @@ async function savePigeon() {
             motherImage: imageData.motherImage
         };
 
-        console.log('Creating pigeon with data:', pigeonData);
+        console.log('Creating pigeon with data:', {
+            name: pigeonData.name,
+            hasPigeonImage: !!pigeonData.pigeonImage,
+            hasFatherImage: !!pigeonData.fatherImage,
+            hasMotherImage: !!pigeonData.motherImage
+        });
 
         const url = editingPigeonId 
             ? `${API_BASE_URL}/pigeons/${editingPigeonId}`
@@ -694,6 +686,16 @@ async function savePigeon() {
     } finally {
         setLoadingState(false);
     }
+}
+
+// Helper function to convert file to base64
+function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
+    });
 }
 
 // Get form data from pigeon form with images
