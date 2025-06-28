@@ -254,4 +254,35 @@ router.get('/debug/users', async (req, res) => {
   }
 });
 
+// Temporary password reset endpoint (for development only)
+router.post('/reset-password', async (req, res) => {
+  try {
+    console.log('Password reset request received');
+    await connectDB();
+    
+    const { email, newPassword } = req.body;
+    
+    if (!email || !newPassword) {
+      return res.status(400).json({ message: 'Email and new password are required' });
+    }
+    
+    // Find the user
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    // Update the password (it will be hashed by the pre-save hook)
+    user.password = newPassword;
+    await user.save();
+    
+    console.log('Password reset successful for:', email);
+    
+    res.json({ message: 'Password reset successfully' });
+  } catch (error) {
+    console.error('Password reset error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 module.exports = router; 
