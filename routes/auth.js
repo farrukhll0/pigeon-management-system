@@ -7,6 +7,11 @@ const connectDB = require('../lib/db');
 const { uploadProfileImage } = require('../middleware/upload');
 const router = express.Router();
 
+// Simple test route to check if auth router is loaded
+router.get('/test', (req, res) => {
+  res.json({ message: 'Auth router is working', timestamp: new Date().toISOString() });
+});
+
 // Register new user
 router.post('/signup', async (req, res) => {
   try {
