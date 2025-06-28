@@ -602,6 +602,10 @@ async function savePigeon() {
         
         const method = editingPigeonId ? 'PUT' : 'POST';
 
+        console.log('Sending pigeon data to:', url);
+        console.log('Method:', method);
+        console.log('FormData has files:', formData.has('pigeonImage'), formData.has('fatherImage'), formData.has('motherImage'));
+
         const savedPigeon = await apiFetch(url, {
             method: method,
             headers: {
@@ -609,6 +613,8 @@ async function savePigeon() {
             },
             body: formData
         });
+        
+        console.log('Pigeon saved successfully:', savedPigeon);
         
         if (editingPigeonId) {
             const index = pigeons.findIndex(p => p._id === editingPigeonId);
@@ -625,6 +631,7 @@ async function savePigeon() {
         showAlert(editingPigeonId ? 'Pigeon updated successfully!' : 'Pigeon added successfully!', 'success');
         editingPigeonId = null;
     } catch (error) {
+        console.error('Error saving pigeon:', error);
         showAlert(error.message || 'Network error. Please try again.', 'danger');
     } finally {
         setLoadingState(false);
@@ -657,10 +664,15 @@ function getPigeonFormData() {
         'pigeonImageInput', 'fatherImageInput', 'motherImageInput'
     ];
     
+    console.log('Processing image inputs...');
     imageInputs.forEach(inputId => {
         const input = document.getElementById(inputId);
+        console.log(`Checking ${inputId}:`, input);
         if (input && input.files[0]) {
+            console.log(`Adding file for ${inputId}:`, input.files[0].name, input.files[0].size, input.files[0].type);
             formData.append(input.name, input.files[0]);
+        } else {
+            console.log(`No file for ${inputId}`);
         }
     });
     
@@ -672,6 +684,11 @@ function getPigeonFormData() {
             formData.append(`${field}Name`, nameInput.value.trim());
         }
     });
+    
+    console.log('FormData entries:');
+    for (let [key, value] of formData.entries()) {
+        console.log(`${key}:`, value instanceof File ? `File: ${value.name} (${value.size} bytes)` : value);
+    }
     
     return formData;
 }

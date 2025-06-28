@@ -45,6 +45,10 @@ router.post('/', auth, uploadPigeonImages, async (req, res) => {
     await connectDB();
     const { name, ringNumber, dateOfBirth, color, sex, strain, breeder, notes, fatherName, motherName } = req.body;
     
+    console.log('Pigeon creation request received');
+    console.log('Files received:', req.files ? Object.keys(req.files) : 'No files');
+    console.log('Body received:', req.body);
+    
     // Process uploaded images with better error handling
     let pigeonImage = '';
     let fatherImage = '';
@@ -52,18 +56,25 @@ router.post('/', auth, uploadPigeonImages, async (req, res) => {
     
     try {
       if (req.files) {
+        console.log('Processing files:', req.files);
+        
         if (req.files.pigeonImage && req.files.pigeonImage[0]) {
           const file = req.files.pigeonImage[0];
+          console.log('Pigeon image file:', file.originalname, file.mimetype, file.size);
           pigeonImage = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
         }
         if (req.files.fatherImage && req.files.fatherImage[0]) {
           const file = req.files.fatherImage[0];
+          console.log('Father image file:', file.originalname, file.mimetype, file.size);
           fatherImage = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
         }
         if (req.files.motherImage && req.files.motherImage[0]) {
           const file = req.files.motherImage[0];
+          console.log('Mother image file:', file.originalname, file.mimetype, file.size);
           motherImage = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
         }
+      } else {
+        console.log('No files received in request');
       }
     } catch (fileError) {
       console.error('File processing error:', fileError);
@@ -94,7 +105,14 @@ router.post('/', auth, uploadPigeonImages, async (req, res) => {
       user: req.user.id
     });
 
+    console.log('Saving pigeon with images:', {
+      hasPigeonImage: !!pigeonImage,
+      hasFatherImage: !!fatherImage,
+      hasMotherImage: !!motherImage
+    });
+
     await pigeon.save();
+    console.log('Pigeon saved successfully');
     res.status(201).json(pigeon);
   } catch (error) {
     console.error('Error creating pigeon:', error);
