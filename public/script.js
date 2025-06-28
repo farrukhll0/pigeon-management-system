@@ -630,14 +630,6 @@ function getPigeonFormData() {
         }
     });
     
-    // Gallery images - only append if files exist
-    const galleryInput = document.getElementById('galleryImagesInput');
-    if (galleryInput && galleryInput.files.length > 0) {
-        for (let i = 0; i < galleryInput.files.length; i++) {
-            formData.append('galleryImages', galleryInput.files[i]);
-        }
-    }
-    
     // Pedigree names - only append if values exist
     const pedigreeFields = ['father', 'mother'];
     pedigreeFields.forEach(field => {

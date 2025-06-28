@@ -45,25 +45,26 @@ router.post('/', auth, uploadPigeonImages, async (req, res) => {
     await connectDB();
     const { name, ringNumber, dateOfBirth, color, sex, strain, breeder, notes, fatherName, motherName } = req.body;
     
-    // Process uploaded images
+    // Process uploaded images with better error handling
     let pigeonImage = '';
     let fatherImage = '';
     let motherImage = '';
-    let galleryImages = [];
     
-    if (req.files) {
-      if (req.files.pigeonImage && req.files.pigeonImage[0]) {
-        pigeonImage = req.files.pigeonImage[0].originalname;
+    try {
+      if (req.files) {
+        if (req.files.pigeonImage && req.files.pigeonImage[0]) {
+          pigeonImage = req.files.pigeonImage[0].originalname;
+        }
+        if (req.files.fatherImage && req.files.fatherImage[0]) {
+          fatherImage = req.files.fatherImage[0].originalname;
+        }
+        if (req.files.motherImage && req.files.motherImage[0]) {
+          motherImage = req.files.motherImage[0].originalname;
+        }
       }
-      if (req.files.fatherImage && req.files.fatherImage[0]) {
-        fatherImage = req.files.fatherImage[0].originalname;
-      }
-      if (req.files.motherImage && req.files.motherImage[0]) {
-        motherImage = req.files.motherImage[0].originalname;
-      }
-      if (req.files.galleryImages) {
-        galleryImages = req.files.galleryImages.map(file => file.originalname);
-      }
+    } catch (fileError) {
+      console.error('File processing error:', fileError);
+      // Continue without images if file processing fails
     }
 
     if (!name) {
@@ -87,13 +88,13 @@ router.post('/', auth, uploadPigeonImages, async (req, res) => {
       pigeonImage,
       fatherImage,
       motherImage,
-      images: galleryImages,
       user: req.user.id
     });
 
     await pigeon.save();
     res.status(201).json(pigeon);
   } catch (error) {
+    console.error('Error creating pigeon:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
