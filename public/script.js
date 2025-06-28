@@ -114,6 +114,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeImageUploads();
     initializeSearchAndFilter();
     checkAuthStatus();
+    addTestButton();
 });
 
 // Initialize all event listeners
@@ -214,10 +215,23 @@ function initializeSearchAndFilter() {
 
 // Handle image upload and preview
 function handleImageUpload(event, previewId) {
+    console.log('=== IMAGE UPLOAD HANDLER ===');
+    console.log('Event:', event);
+    console.log('Preview ID:', previewId);
+    
     const file = event.target.files[0];
     const preview = document.getElementById(previewId);
     
+    console.log('File:', file);
+    console.log('Preview element:', preview);
+    
     if (file && file.type.startsWith('image/')) {
+        console.log('✅ Valid image file detected:', {
+            name: file.name,
+            size: file.size,
+            type: file.type
+        });
+        
         // Check file size (limit to 5MB)
         if (file.size > 5 * 1024 * 1024) {
             showAlert('Image size must be less than 5MB', 'warning');
@@ -227,6 +241,9 @@ function handleImageUpload(event, previewId) {
         
         const reader = new FileReader();
         reader.onload = function(e) {
+            console.log('✅ File read successfully, length:', e.target.result.length);
+            console.log('Preview data:', e.target.result.substring(0, 50) + '...');
+            
             preview.innerHTML = `
                 <div class="image-container">
                     <img src="${e.target.result}" class="image-preview" alt="Preview">
@@ -235,8 +252,22 @@ function handleImageUpload(event, previewId) {
                     </button>
                 </div>
             `;
+            console.log('✅ Preview updated');
         };
+        
+        reader.onerror = function(error) {
+            console.error('❌ Error reading file:', error);
+            showAlert('Error reading image file', 'danger');
+        };
+        
         reader.readAsDataURL(file);
+    } else {
+        console.log('❌ Invalid file or no file selected');
+        if (file) {
+            console.log('File type:', file.type);
+            showAlert('Please select a valid image file', 'warning');
+        }
+        event.target.value = '';
     }
 }
 
@@ -1050,4 +1081,60 @@ function showAlert(message, type) {
             alert.remove();
         }
     }, 5000);
+}
+
+// Test image upload function
+function testImageUpload() {
+    console.log('=== TESTING IMAGE UPLOAD ===');
+    
+    const imageInputs = [
+        { id: 'pigeonImageInput', field: 'pigeonImage' },
+        { id: 'fatherImageInput', field: 'fatherImage' },
+        { id: 'motherImageInput', field: 'motherImage' }
+    ];
+    
+    imageInputs.forEach(input => {
+        const fileInput = document.getElementById(input.id);
+        console.log(`\n--- Testing ${input.id} ---`);
+        console.log('File input element:', fileInput);
+        
+        if (fileInput) {
+            console.log('Files in input:', fileInput.files);
+            console.log('Number of files:', fileInput.files.length);
+            
+            if (fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                console.log('File details:', {
+                    name: file.name,
+                    size: file.size,
+                    type: file.type,
+                    lastModified: new Date(file.lastModified)
+                });
+                
+                // Test if it's a real image
+                if (file.type.startsWith('image/')) {
+                    console.log('✅ Valid image file detected');
+                } else {
+                    console.log('❌ Not a valid image file');
+                }
+            } else {
+                console.log('❌ No files selected');
+            }
+        } else {
+            console.log('❌ File input element not found');
+        }
+    });
+}
+
+// Add test button to the page
+function addTestButton() {
+    const testButton = document.createElement('button');
+    testButton.textContent = 'Test Image Upload';
+    testButton.className = 'btn btn-warning btn-sm';
+    testButton.onclick = testImageUpload;
+    testButton.style.position = 'fixed';
+    testButton.style.top = '10px';
+    testButton.style.right = '10px';
+    testButton.style.zIndex = '9999';
+    document.body.appendChild(testButton);
 }
