@@ -56,8 +56,13 @@ router.post('/login', async (req, res) => {
     await connectDB();
     const { email, password } = req.body;
 
-    // Check if user exists
-    const user = await User.findOne({ email });
+    // Validate input
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email and password are required' });
+    }
+
+    // Check if user exists - only select necessary fields for faster query
+    const user = await User.findOne({ email }).select('+password');
     if (!user) {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
@@ -94,19 +99,17 @@ router.post('/login', async (req, res) => {
 router.get('/me', auth, async (req, res) => {
   try {
     await connectDB();
-    const token = req.header('Authorization')?.replace('Bearer ', '');
-    if (!token) {
-      return res.status(401).json({ message: 'No token provided' });
-    }
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.userId).select('-password');
+    
+    // User is already verified by auth middleware, just get the user data
+    const user = await User.findById(req.user.id).select('-password');
     if (!user) {
-      return res.status(401).json({ message: 'Invalid token' });
+      return res.status(401).json({ message: 'User not found' });
     }
+    
     res.json(user);
   } catch (error) {
     console.error('Get user error:', error);
-    res.status(401).json({ message: 'Invalid token' });
+    res.status(500).json({ message: 'Server error' });
   }
 });
 

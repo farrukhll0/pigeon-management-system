@@ -15,7 +15,7 @@ const IMAGE_BASE_URL = isProduction
     : 'http://localhost:3000';
 
 // Enhanced fetch wrapper with better error handling and retry logic
-async function apiFetch(url, options = {}, retries = 2) {
+async function apiFetch(url, options = {}, retries = 1) {
     const defaultOptions = {
         headers: {
             'Content-Type': 'application/json',
@@ -58,7 +58,7 @@ async function apiFetch(url, options = {}, retries = 2) {
             }
             
             // Wait before retrying (reduced backoff)
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            await new Promise(resolve => setTimeout(resolve, 500));
         }
     }
 }
@@ -320,10 +320,27 @@ function checkAuthStatus() {
     const user = localStorage.getItem('user');
     
     if (token && user) {
-        currentUser = JSON.parse(user);
-        showMainApp();
-        loadPigeons();
-        loadUserProfile();
+        try {
+            currentUser = JSON.parse(user);
+            showMainApp();
+            
+            // Load data in parallel for faster loading
+            Promise.all([
+                loadPigeons(),
+                loadUserProfile()
+            ]).catch(error => {
+                console.error('Error loading initial data:', error);
+                // If there's an error, clear invalid auth data
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('user');
+                showAuthSection();
+            });
+        } catch (error) {
+            console.error('Error parsing user data:', error);
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('user');
+            showAuthSection();
+        }
     } else {
         showAuthSection();
     }
@@ -351,6 +368,12 @@ async function handleLogin(e) {
     const email = document.getElementById('loginEmail').value;
     const password = document.getElementById('loginPassword').value;
 
+    // Show loading state
+    const loginBtn = document.querySelector('#loginFormElement button[type="submit"]');
+    const originalText = loginBtn.innerHTML;
+    loginBtn.disabled = true;
+    loginBtn.innerHTML = '<span class="loading-spinner"></span> Logging in...';
+
     try {
         const data = await apiFetch(`${API_BASE_URL}/auth/login`, {
             method: 'POST',
@@ -360,12 +383,23 @@ async function handleLogin(e) {
         localStorage.setItem('authToken', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
         currentUser = data.user;
+        
+        // Show main app immediately
         showMainApp();
-        loadPigeons();
-        loadUserProfile();
+        
+        // Load data in parallel for faster loading
+        await Promise.all([
+            loadPigeons(),
+            loadUserProfile()
+        ]);
+        
         showAlert('Login successful!', 'success');
     } catch (error) {
         showAlert(error.message || 'Network error. Please try again.', 'danger');
+    } finally {
+        // Reset button state
+        loginBtn.disabled = false;
+        loginBtn.innerHTML = originalText;
     }
 }
 
