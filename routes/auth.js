@@ -27,15 +27,37 @@ router.get('/debug/users', (req, res) => {
 // Register new user
 router.post('/signup', async (req, res) => {
   try {
+    console.log('Signup request received:', {
+      body: req.body,
+      headers: req.headers,
+      method: req.method,
+      url: req.url
+    });
+
     await connectDB();
     const { name, email, password } = req.body;
 
+    console.log('Extracted signup data:', { 
+      name: name ? 'provided' : 'missing', 
+      email: email ? 'provided' : 'missing', 
+      password: password ? 'provided' : 'missing' 
+    });
+
+    // Validate input
+    if (!name || !email || !password) {
+      console.log('Validation failed: missing required fields');
+      return res.status(400).json({ message: 'Name, email, and password are required' });
+    }
+
     // Check if user already exists
+    console.log('Checking if user exists with email:', email);
     const existingUser = await User.findOne({ email });
     if (existingUser) {
+      console.log('User already exists with email:', email);
       return res.status(400).json({ message: 'User already exists' });
     }
 
+    console.log('Creating new user...');
     // Create new user (let pre-save hook hash the password)
     const user = new User({
       name,
@@ -44,6 +66,7 @@ router.post('/signup', async (req, res) => {
     });
 
     await user.save();
+    console.log('User created successfully:', user.email);
 
     // Create JWT token
     const token = jwt.sign(
@@ -51,6 +74,8 @@ router.post('/signup', async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
+
+    console.log('Signup successful for:', email);
 
     res.status(201).json({
       message: 'User created successfully',
@@ -63,6 +88,7 @@ router.post('/signup', async (req, res) => {
     });
   } catch (error) {
     console.error('Signup error:', error);
+    console.error('Error stack:', error.stack);
     res.status(500).json({ message: 'Server error' });
   }
 });
