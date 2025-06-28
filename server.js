@@ -28,7 +28,19 @@ app.use('/api/pigeons', pigeonRoutes);
 
 // Basic route
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', message: 'Server is running' });
+  const envCheck = {
+    MONGODB_URI: process.env.MONGODB_URI ? 'Set' : 'NOT SET',
+    JWT_SECRET: process.env.JWT_SECRET ? 'Set' : 'NOT SET',
+    NODE_ENV: process.env.NODE_ENV || 'development',
+    VERCEL: process.env.VERCEL ? 'Yes' : 'No'
+  };
+  
+  res.json({ 
+    status: 'OK', 
+    message: 'Server is running',
+    environment: envCheck,
+    timestamp: new Date().toISOString()
+  });
 });
 
 // Serve the main page
