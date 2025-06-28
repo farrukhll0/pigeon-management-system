@@ -205,4 +205,24 @@ router.post('/profile-image', auth, uploadProfileImage, async (req, res) => {
   }
 });
 
+// Debug endpoint to list users (for development only)
+router.get('/debug/users', async (req, res) => {
+  try {
+    await connectDB();
+    const users = await User.find({}).select('-password');
+    res.json({
+      count: users.length,
+      users: users.map(user => ({
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        createdAt: user.createdAt
+      }))
+    });
+  } catch (error) {
+    console.error('Debug users error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 module.exports = router; 
