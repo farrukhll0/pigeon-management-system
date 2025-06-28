@@ -415,7 +415,6 @@ function showMainApp() {
         userInfo.textContent = `Welcome, ${currentUser.name}`;
     }
     initializePigeonButtons();
-    addTestButton();
 }
 
 // Handle login
@@ -875,8 +874,14 @@ function resetPigeonForm() {
 
 // View pigeon details
 function viewPigeon(pigeonId) {
+    console.log('View pigeon called with ID:', pigeonId);
+    editingPigeonId = pigeonId; // Set this for the edit button in the modal
+    
     const pigeon = pigeons.find(p => p._id === pigeonId);
-    if (!pigeon) return;
+    if (!pigeon) {
+        showAlert('Pigeon not found', 'error');
+        return;
+    }
 
     const pedigree = pigeon.pedigree || {};
     
@@ -1020,6 +1025,10 @@ function viewPigeon(pigeonId) {
             </div>
         </div>
     `;
+    
+    // Show the modal
+    const modal = new bootstrap.Modal(document.getElementById('viewPigeonModal'));
+    modal.show();
 }
 
 // Save profile
@@ -1116,73 +1125,6 @@ function showAlert(message, type) {
             alert.remove();
         }
     }, 5000);
-}
-
-// Test image upload function
-function testImageUpload() {
-    console.log('=== TESTING IMAGE UPLOAD ===');
-    
-    const imageInputs = [
-        { id: 'pigeonImageInput', field: 'pigeonImage' },
-        { id: 'fatherImageInput', field: 'fatherImage' },
-        { id: 'motherImageInput', field: 'motherImage' }
-    ];
-    
-    imageInputs.forEach(input => {
-        const fileInput = document.getElementById(input.id);
-        console.log(`\n--- Testing ${input.id} ---`);
-        console.log('File input element:', fileInput);
-        
-        if (fileInput) {
-            console.log('Files in input:', fileInput.files);
-            console.log('Number of files:', fileInput.files.length);
-            
-            if (fileInput.files.length > 0) {
-                const file = fileInput.files[0];
-                console.log('File details:', {
-                    name: file.name,
-                    size: file.size,
-                    type: file.type,
-                    lastModified: new Date(file.lastModified)
-                });
-                
-                // Test if it's a real image
-                if (file.type.startsWith('image/')) {
-                    console.log('✅ Valid image file detected');
-                } else {
-                    console.log('❌ Not a valid image file');
-                }
-            } else {
-                console.log('❌ No files selected');
-            }
-        } else {
-            console.log('❌ File input element not found');
-        }
-    });
-}
-
-// Add test button to the page
-function addTestButton() {
-    // Only add test button if user is logged in and in main app
-    if (!currentUser || !mainApp || mainApp.classList.contains('hidden')) {
-        return;
-    }
-    
-    // Remove existing test button if it exists
-    const existingButton = document.querySelector('.test-image-upload-btn');
-    if (existingButton) {
-        existingButton.remove();
-    }
-    
-    const testButton = document.createElement('button');
-    testButton.textContent = 'Test Image Upload';
-    testButton.className = 'btn btn-warning btn-sm test-image-upload-btn';
-    testButton.onclick = testImageUpload;
-    testButton.style.position = 'fixed';
-    testButton.style.top = '10px';
-    testButton.style.right = '10px';
-    testButton.style.zIndex = '9999';
-    document.body.appendChild(testButton);
 }
 
 // Edit current pigeon
@@ -1294,5 +1236,97 @@ function handleProfileImageUpload(event) {
             showAlert('Please select a valid image file for profile', 'warning');
         }
         event.target.value = '';
+    }
+}
+
+// Edit pigeon
+function editPigeon(pigeonId) {
+    console.log('Edit pigeon called with ID:', pigeonId);
+    editingPigeonId = pigeonId;
+    
+    const pigeon = pigeons.find(p => p._id === pigeonId);
+    if (!pigeon) {
+        showAlert('Pigeon not found', 'error');
+        return;
+    }
+    
+    // Fill form with pigeon data
+    document.getElementById('pigeonName').value = pigeon.name || '';
+    document.getElementById('ringNumber').value = pigeon.ringNumber || '';
+    document.getElementById('dateOfBirth').value = pigeon.dateOfBirth || '';
+    document.getElementById('color').value = pigeon.color || '';
+    document.getElementById('sex').value = pigeon.sex || 'Unknown';
+    document.getElementById('strain').value = pigeon.strain || '';
+    document.getElementById('breeder').value = pigeon.breeder || '';
+    document.getElementById('notes').value = pigeon.notes || '';
+    document.getElementById('fatherName').value = pigeon.fatherName || '';
+    document.getElementById('motherName').value = pigeon.motherName || '';
+    
+    // Show images if they exist
+    if (pigeon.pigeonImage) {
+        document.getElementById('pigeonImagePreview').innerHTML = `
+            <div class="image-container">
+                <img src="${pigeon.pigeonImage}" class="image-preview" alt="Pigeon Preview">
+                <button type="button" class="remove-image" onclick="removeImage('pigeonImageInput', 'pigeonImagePreview')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+    }
+    
+    if (pigeon.fatherImage) {
+        document.getElementById('fatherImagePreview').innerHTML = `
+            <div class="image-container">
+                <img src="${pigeon.fatherImage}" class="image-preview" alt="Father Preview">
+                <button type="button" class="remove-image" onclick="removeImage('fatherImageInput', 'fatherImagePreview')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+    }
+    
+    if (pigeon.motherImage) {
+        document.getElementById('motherImagePreview').innerHTML = `
+            <div class="image-container">
+                <img src="${pigeon.motherImage}" class="image-preview" alt="Mother Preview">
+                <button type="button" class="remove-image" onclick="removeImage('motherImageInput', 'motherImagePreview')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+    }
+    
+    // Update modal title
+    document.getElementById('modalTitle').textContent = 'Edit Pigeon';
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('addPigeonModal'));
+    modal.show();
+}
+
+// Delete pigeon
+async function deletePigeon(pigeonId) {
+    if (!confirm('Are you sure you want to delete this pigeon?')) {
+        return;
+    }
+    
+    try {
+        const token = localStorage.getItem('authToken');
+        await apiFetch(`${API_BASE_URL}/pigeons/${pigeonId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        // Remove from local arrays
+        pigeons = pigeons.filter(p => p._id !== pigeonId);
+        filteredPigeons = filteredPigeons.filter(p => p._id !== pigeonId);
+        
+        renderPigeons();
+        showAlert('Pigeon deleted successfully', 'success');
+    } catch (error) {
+        console.error('Error deleting pigeon:', error);
+        showAlert(error.message || 'Failed to delete pigeon', 'danger');
     }
 }
