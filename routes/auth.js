@@ -12,6 +12,18 @@ router.get('/test', (req, res) => {
   res.json({ message: 'Auth router is working', timestamp: new Date().toISOString() });
 });
 
+// Simple test route for debug users
+router.get('/debug/users', (req, res) => {
+  res.json({ 
+    message: 'Debug endpoint reached', 
+    timestamp: new Date().toISOString(),
+    env: {
+      MONGODB_URI: process.env.MONGODB_URI ? 'Set' : 'NOT SET',
+      JWT_SECRET: process.env.JWT_SECRET ? 'Set' : 'NOT SET'
+    }
+  });
+});
+
 // Register new user
 router.post('/signup', async (req, res) => {
   try {

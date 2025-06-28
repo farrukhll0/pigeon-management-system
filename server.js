@@ -14,6 +14,8 @@ const connectDB = require('./lib/db');
 const authRoutes = require('./routes/auth');
 const pigeonRoutes = require('./routes/pigeons');
 
+console.log('Routes imported successfully');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -23,8 +25,11 @@ app.use(express.json({ limit: '10mb' })); // Increased limit for image uploads
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Routes
+console.log('Setting up auth routes...');
 app.use('/api/auth', authRoutes);
+console.log('Setting up pigeon routes...');
 app.use('/api/pigeons', pigeonRoutes);
+console.log('All routes set up successfully');
 
 // Basic route
 app.get('/api/health', (req, res) => {
