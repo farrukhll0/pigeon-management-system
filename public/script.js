@@ -15,7 +15,7 @@ const IMAGE_BASE_URL = isProduction
     : 'http://localhost:3000';
 
 // Enhanced fetch wrapper with better error handling and retry logic
-async function apiFetch(url, options = {}, retries = 3) {
+async function apiFetch(url, options = {}, retries = 2) {
     const defaultOptions = {
         headers: {
             'Content-Type': 'application/json',
@@ -30,21 +30,13 @@ async function apiFetch(url, options = {}, retries = 3) {
 
     const finalOptions = { ...defaultOptions, ...options };
 
-    console.log('API Fetch:', { url, method: finalOptions.method, body: finalOptions.body });
-
     for (let attempt = 1; attempt <= retries; attempt++) {
         try {
-            console.log(`API attempt ${attempt}/${retries} for:`, url);
-            
             const response = await fetch(url, finalOptions);
-            
-            console.log('Response status:', response.status);
-            console.log('Response headers:', Object.fromEntries(response.headers.entries()));
             
             // Handle different response types
             if (response.headers.get('content-type')?.includes('application/json')) {
                 const data = await response.json();
-                console.log('Response data:', data);
                 
                 if (!response.ok) {
                     throw new Error(data.message || `HTTP ${response.status}: ${response.statusText}`);
@@ -60,15 +52,13 @@ async function apiFetch(url, options = {}, retries = 3) {
                 return response;
             }
         } catch (error) {
-            console.error(`API Error (attempt ${attempt}/${retries}):`, error);
-            
             // If this is the last attempt, throw the error
             if (attempt === retries) {
                 throw error;
             }
             
-            // Wait before retrying (exponential backoff)
-            await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+            // Wait before retrying (reduced backoff)
+            await new Promise(resolve => setTimeout(resolve, 1000));
         }
     }
 }
@@ -120,10 +110,6 @@ const clearFilters = document.getElementById('clearFilters');
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 Initializing Pigeon Manager...');
-    console.log('🌍 Environment:', isProduction ? 'Production' : 'Development');
-    console.log('🔗 API Base URL:', API_BASE_URL);
-    
     initializeEventListeners();
     initializeImageUploads();
     initializeSearchAndFilter();
@@ -190,8 +176,6 @@ function initializeEventListeners() {
 function initializeImageUploads() {
     const imageInputs = [
         'pigeonImageInput', 'fatherImageInput', 'motherImageInput',
-        'gggFatherImageInput', 'gggMotherImageInput', 'ggFatherImageInput',
-        'ggMotherImageInput', 'gFatherImageInput', 'gMotherImageInput',
         'galleryImagesInput'
     ];
 
@@ -234,6 +218,13 @@ function handleImageUpload(event, previewId) {
     const preview = document.getElementById(previewId);
     
     if (file && file.type.startsWith('image/')) {
+        // Check file size (limit to 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            showAlert('Image size must be less than 5MB', 'warning');
+            event.target.value = '';
+            return;
+        }
+        
         const reader = new FileReader();
         reader.onload = function(e) {
             preview.innerHTML = `
@@ -255,7 +246,26 @@ function handleGalleryImageUpload(event) {
     const preview = document.getElementById('galleryImagesPreview');
     
     if (files && files.length > 0) {
+        // Check total file size
+        let totalSize = 0;
+        for (let i = 0; i < files.length; i++) {
+            totalSize += files[i].size;
+            if (files[i].size > 5 * 1024 * 1024) {
+                showAlert(`Image ${files[i].name} is too large. Must be less than 5MB.`, 'warning');
+                event.target.value = '';
+                return;
+            }
+        }
+        
+        if (totalSize > 50 * 1024 * 1024) { // 50MB total limit
+            showAlert('Total gallery size must be less than 50MB', 'warning');
+            event.target.value = '';
+            return;
+        }
+        
         let previewHTML = '';
+        let processedCount = 0;
+        
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
             if (file.type.startsWith('image/')) {
@@ -269,7 +279,12 @@ function handleGalleryImageUpload(event) {
                             </button>
                         </div>
                     `;
-                    preview.innerHTML = previewHTML;
+                    processedCount++;
+                    
+                    // Update preview when all images are processed
+                    if (processedCount === files.length) {
+                        preview.innerHTML = previewHTML;
+                    }
                 };
                 reader.readAsDataURL(file);
             }
@@ -336,16 +351,11 @@ async function handleLogin(e) {
     const email = document.getElementById('loginEmail').value;
     const password = document.getElementById('loginPassword').value;
 
-    console.log('Login attempt:', { email, password: '***' });
-    console.log('API URL:', `${API_BASE_URL}/auth/login`);
-
     try {
         const data = await apiFetch(`${API_BASE_URL}/auth/login`, {
             method: 'POST',
             body: JSON.stringify({ email, password })
         });
-
-        console.log('Login successful, data:', data);
 
         localStorage.setItem('authToken', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
@@ -355,11 +365,6 @@ async function handleLogin(e) {
         loadUserProfile();
         showAlert('Login successful!', 'success');
     } catch (error) {
-        console.error('Login error:', error);
-        console.error('Error details:', {
-            message: error.message,
-            stack: error.stack
-        });
         showAlert(error.message || 'Network error. Please try again.', 'danger');
     }
 }
@@ -394,7 +399,6 @@ async function handleSignup(e) {
         loginForm.classList.remove('hidden');
         signupFormElement.reset();
     } catch (error) {
-        console.error('Signup error:', error);
         showAlert(error.message || 'Network error. Please try again.', 'danger');
     }
 }
@@ -426,7 +430,6 @@ async function loadPigeons() {
         filteredPigeons = [...pigeons];
         renderPigeons();
     } catch (error) {
-        console.error('Error loading pigeons:', error);
         showAlert('Failed to load pigeons. Please refresh the page.', 'warning');
     }
 }
@@ -588,7 +591,6 @@ async function savePigeon() {
         showAlert(editingPigeonId ? 'Pigeon updated successfully!' : 'Pigeon added successfully!', 'success');
         editingPigeonId = null;
     } catch (error) {
-        console.error('Error saving pigeon:', error);
         showAlert(error.message || 'Network error. Please try again.', 'danger');
     } finally {
         setLoadingState(false);
@@ -600,22 +602,25 @@ function getPigeonFormData() {
     const formData = new FormData();
     
     // Basic information
-    formData.append('name', document.getElementById('pigeonName').value);
-    formData.append('ringNumber', document.getElementById('ringNumber').value);
-    formData.append('dateOfBirth', document.getElementById('dateOfBirth').value);
-    formData.append('color', document.getElementById('color').value);
-    formData.append('sex', document.getElementById('sex').value);
-    formData.append('strain', document.getElementById('strain').value);
-    formData.append('breeder', document.getElementById('breeder').value);
-    formData.append('notes', document.getElementById('notes').value);
-    formData.append('fatherName', document.getElementById('fatherName').value);
-    formData.append('motherName', document.getElementById('motherName').value);
+    const name = document.getElementById('pigeonName').value.trim();
+    if (!name) {
+        throw new Error('Pigeon name is required');
+    }
     
-    // Images
+    formData.append('name', name);
+    formData.append('ringNumber', document.getElementById('ringNumber').value.trim());
+    formData.append('dateOfBirth', document.getElementById('dateOfBirth').value);
+    formData.append('color', document.getElementById('color').value.trim());
+    formData.append('sex', document.getElementById('sex').value);
+    formData.append('strain', document.getElementById('strain').value.trim());
+    formData.append('breeder', document.getElementById('breeder').value.trim());
+    formData.append('notes', document.getElementById('notes').value.trim());
+    formData.append('fatherName', document.getElementById('fatherName').value.trim());
+    formData.append('motherName', document.getElementById('motherName').value.trim());
+    
+    // Images - only append if files exist
     const imageInputs = [
-        'pigeonImageInput', 'fatherImageInput', 'motherImageInput',
-        'gggFatherImageInput', 'gggMotherImageInput', 'ggFatherImageInput',
-        'ggMotherImageInput', 'gFatherImageInput', 'gMotherImageInput'
+        'pigeonImageInput', 'fatherImageInput', 'motherImageInput'
     ];
     
     imageInputs.forEach(inputId => {
@@ -625,20 +630,20 @@ function getPigeonFormData() {
         }
     });
     
-    // Gallery images
+    // Gallery images - only append if files exist
     const galleryInput = document.getElementById('galleryImagesInput');
-    if (galleryInput && galleryInput.files) {
+    if (galleryInput && galleryInput.files.length > 0) {
         for (let i = 0; i < galleryInput.files.length; i++) {
             formData.append('galleryImages', galleryInput.files[i]);
         }
     }
     
-    // Pedigree names
-    const pedigreeFields = ['gggFather', 'gggMother', 'ggFather', 'ggMother', 'gFather', 'gMother'];
+    // Pedigree names - only append if values exist
+    const pedigreeFields = ['father', 'mother'];
     pedigreeFields.forEach(field => {
         const nameInput = document.getElementById(`${field}Name`);
-        if (nameInput && nameInput.value) {
-            formData.append(`${field}Name`, nameInput.value);
+        if (nameInput && nameInput.value.trim()) {
+            formData.append(`${field}Name`, nameInput.value.trim());
         }
     });
     
@@ -654,8 +659,6 @@ function resetPigeonForm() {
     // Clear all image previews
     const previewIds = [
         'pigeonImagePreview', 'fatherImagePreview', 'motherImagePreview',
-        'gggFatherImagePreview', 'gggMotherImagePreview', 'ggFatherImagePreview',
-        'ggMotherImagePreview', 'gFatherImagePreview', 'gMotherImagePreview',
         'galleryImagesPreview'
     ];
     
@@ -803,295 +806,4 @@ function viewPigeon(pigeonId) {
                             <div class="pedigree-item-enhanced">
                                 <strong>Great-Grandmother</strong>
                                 ${pedigree.greatGrandmother && pedigree.greatGrandmother.image ? 
-                                    `<img src="${IMAGE_BASE_URL}${pedigree.greatGrandmother.image}" class="pedigree-image-enhanced" alt="GG Mother">` : 
-                                    '<div class="pedigree-image-enhanced bg-light d-flex align-items-center justify-content-center"><i class="fas fa-user text-muted"></i></div>'
-                                }
-                                <div>${pedigree.greatGrandmother ? pedigree.greatGrandmother.name : 'Unknown'}</div>
-                            </div>
-                        </div>
-                        <div class="pedigree-level-enhanced">
-                            <div class="pedigree-item-enhanced">
-                                <strong>Grandfather</strong>
-                                ${pedigree.grandfather && pedigree.grandfather.image ? 
-                                    `<img src="${IMAGE_BASE_URL}${pedigree.grandfather.image}" class="pedigree-image-enhanced" alt="G Father">` : 
-                                    '<div class="pedigree-image-enhanced bg-light d-flex align-items-center justify-content-center"><i class="fas fa-user text-muted"></i></div>'
-                                }
-                                <div>${pedigree.grandfather ? pedigree.grandfather.name : 'Unknown'}</div>
-                            </div>
-                            <div class="pedigree-item-enhanced">
-                                <strong>Grandmother</strong>
-                                ${pedigree.grandmother && pedigree.grandmother.image ? 
-                                    `<img src="${IMAGE_BASE_URL}${pedigree.grandmother.image}" class="pedigree-image-enhanced" alt="G Mother">` : 
-                                    '<div class="pedigree-image-enhanced bg-light d-flex align-items-center justify-content-center"><i class="fas fa-user text-muted"></i></div>'
-                                }
-                                <div>${pedigree.grandmother ? pedigree.grandmother.name : 'Unknown'}</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Gallery Section -->
-        ${pigeon.images && pigeon.images.length > 0 ? `
-        <div class="row">
-            <div class="col-12">
-                <div class="gallery-section">
-                    <h6><i class="fas fa-images me-2"></i>Gallery</h6>
-                    <div class="gallery-grid">
-                        ${pigeon.images.map(img => `
-                            <div class="gallery-item">
-                                <img src="${IMAGE_BASE_URL}${img}" class="gallery-image" alt="Gallery Image">
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-            </div>
-        </div>
-        ` : ''}
-    `;
-
-    // Store the pigeon ID for editing
-    editPigeonBtn.onclick = () => editPigeon(pigeonId);
-    
-    const viewModal = new bootstrap.Modal(document.getElementById('viewPigeonModal'));
-    viewModal.show();
-}
-
-// Edit pigeon
-function editPigeon(pigeonId) {
-    const pigeon = pigeons.find(p => p._id === pigeonId);
-    if (!pigeon) return;
-
-    editingPigeonId = pigeonId;
-    document.getElementById('modalTitle').textContent = 'Edit Pigeon';
-    
-    // Fill form with pigeon data
-    document.getElementById('pigeonName').value = pigeon.name;
-    document.getElementById('ringNumber').value = pigeon.ringNumber || '';
-    document.getElementById('dateOfBirth').value = pigeon.dateOfBirth ? new Date(pigeon.dateOfBirth).toISOString().split('T')[0] : '';
-    document.getElementById('color').value = pigeon.color || '';
-    document.getElementById('sex').value = pigeon.sex || 'Unknown';
-    document.getElementById('strain').value = pigeon.strain || '';
-    document.getElementById('breeder').value = pigeon.breeder || '';
-    document.getElementById('notes').value = pigeon.notes || '';
-    document.getElementById('fatherName').value = pigeon.fatherName || '';
-    document.getElementById('motherName').value = pigeon.motherName || '';
-    
-    // Show existing images
-    if (pigeon.pigeonImage) {
-        document.getElementById('pigeonImagePreview').innerHTML = `
-            <div class="image-container">
-                <img src="${IMAGE_BASE_URL}${pigeon.pigeonImage}" class="image-preview" alt="Pigeon">
-            </div>
-        `;
-    }
-    
-    if (pigeon.fatherImage) {
-        document.getElementById('fatherImagePreview').innerHTML = `
-            <div class="image-container">
-                <img src="${IMAGE_BASE_URL}${pigeon.fatherImage}" class="image-preview" alt="Father">
-            </div>
-        `;
-    }
-    
-    if (pigeon.motherImage) {
-        document.getElementById('motherImagePreview').innerHTML = `
-            <div class="image-container">
-                <img src="${IMAGE_BASE_URL}${pigeon.motherImage}" class="image-preview" alt="Mother">
-            </div>
-        `;
-    }
-    
-    // Show existing gallery images
-    if (pigeon.images && pigeon.images.length > 0) {
-        const galleryPreview = document.getElementById('galleryImagesPreview');
-        galleryPreview.innerHTML = pigeon.images.map(img => `
-            <div class="image-container d-inline-block me-2 mb-2">
-                <img src="${IMAGE_BASE_URL}${img}" class="image-preview" alt="Gallery Image" style="width: 80px; height: 80px;">
-            </div>
-        `).join('');
-    }
-    
-    const pedigree = pigeon.pedigree || {};
-    
-    // Map frontend field names to backend field names
-    const fieldMapping = {
-        'gggFather': 'greatGreatGrandfather',
-        'gggMother': 'greatGreatGrandmother',
-        'ggFather': 'greatGrandfather',
-        'ggMother': 'greatGrandmother',
-        'gFather': 'grandfather',
-        'gMother': 'grandmother'
-    };
-    
-    Object.keys(fieldMapping).forEach(frontendField => {
-        const backendField = fieldMapping[frontendField];
-        const nameInput = document.getElementById(`${frontendField}Name`);
-        const previewDiv = document.getElementById(`${frontendField}ImagePreview`);
-        
-        if (nameInput) {
-            nameInput.value = pedigree[backendField] ? pedigree[backendField].name : '';
-        }
-        
-        if (previewDiv && pedigree[backendField] && pedigree[backendField].image) {
-            previewDiv.innerHTML = `
-                <div class="image-container">
-                    <img src="${IMAGE_BASE_URL}${pedigree[backendField].image}" class="image-preview" alt="${frontendField}">
-                </div>
-            `;
-        }
-    });
-
-    // Close view modal and open edit modal
-    bootstrap.Modal.getInstance(document.getElementById('viewPigeonModal')).hide();
-    const editModal = new bootstrap.Modal(document.getElementById('addPigeonModal'));
-    editModal.show();
-}
-
-// Edit current pigeon (from view modal)
-function editCurrentPigeon() {
-    if (editingPigeonId) {
-        editPigeon(editingPigeonId);
-    }
-}
-
-// Delete pigeon
-async function deletePigeon(pigeonId) {
-    if (!confirm('Are you sure you want to delete this pigeon?')) {
-        return;
-    }
-
-    try {
-        const token = localStorage.getItem('authToken');
-        await apiFetch(`${API_BASE_URL}/pigeons/${pigeonId}`, {
-            method: 'DELETE',
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        });
-
-        pigeons = pigeons.filter(p => p._id !== pigeonId);
-        filteredPigeons = filteredPigeons.filter(p => p._id !== pigeonId);
-        renderPigeons();
-        showAlert('Pigeon deleted successfully', 'success');
-    } catch (error) {
-        console.error('Error deleting pigeon:', error);
-        showAlert(error.message || 'Network error. Please try again.', 'danger');
-    }
-}
-
-// Handle profile image upload
-function handleProfileImageUpload(event) {
-    const file = event.target.files[0];
-    const preview = document.getElementById('profileImagePreview');
-    
-    if (file && file.type.startsWith('image/')) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            preview.src = e.target.result;
-        };
-        reader.readAsDataURL(file);
-    }
-}
-
-// Save profile
-async function saveProfile() {
-    if (isLoading) return; // Prevent multiple submissions
-    
-    const formData = new FormData();
-    const profileImageInput = document.getElementById('profileImageInput');
-    const profileName = document.getElementById('profileName').value;
-    
-    if (profileImageInput && profileImageInput.files[0]) {
-        formData.append('profileImage', profileImageInput.files[0]);
-    }
-    
-    try {
-        setLoadingState(true);
-        const token = localStorage.getItem('authToken');
-        
-        // Update profile image if provided
-        if (profileImageInput && profileImageInput.files[0]) {
-            const imageData = await apiFetch(`${API_BASE_URL}/auth/profile-image`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                },
-                body: formData
-            });
-            
-            if (userProfileImage) {
-                userProfileImage.src = `${IMAGE_BASE_URL}${imageData.profileImage}`;
-            }
-        }
-        
-        // Update user info in localStorage
-        if (currentUser) {
-            currentUser.name = profileName;
-            localStorage.setItem('user', JSON.stringify(currentUser));
-            if (userInfo) {
-                userInfo.textContent = `Welcome, ${currentUser.name}`;
-            }
-        }
-        
-        bootstrap.Modal.getInstance(document.getElementById('profileModal')).hide();
-        showAlert('Profile updated successfully!', 'success');
-    } catch (error) {
-        console.error('Error updating profile:', error);
-        showAlert(error.message || 'Failed to update profile', 'danger');
-    } finally {
-        setLoadingState(false);
-    }
-}
-
-// Load user profile data
-async function loadUserProfile() {
-    try {
-        const token = localStorage.getItem('authToken');
-        const userData = await apiFetch(`${API_BASE_URL}/auth/me`, {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        });
-        
-        // Update profile form
-        const profileName = document.getElementById('profileName');
-        const profileEmail = document.getElementById('profileEmail');
-        const profileImagePreview = document.getElementById('profileImagePreview');
-        
-        if (profileName) profileName.value = userData.name;
-        if (profileEmail) profileEmail.value = userData.email;
-        
-        if (userData.profileImage && profileImagePreview) {
-            profileImagePreview.src = `${IMAGE_BASE_URL}${userData.profileImage}`;
-        }
-        
-        if (userData.profileImage && userProfileImage) {
-            userProfileImage.src = `${IMAGE_BASE_URL}${userData.profileImage}`;
-        }
-    } catch (error) {
-        console.error('Error loading user profile:', error);
-    }
-}
-
-// Show alert message
-function showAlert(message, type) {
-    // Create alert element
-    const alertDiv = document.createElement('div');
-    alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
-    alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
-    alertDiv.innerHTML = `
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
-    
-    document.body.appendChild(alertDiv);
-    
-    // Auto remove after 5 seconds
-    setTimeout(() => {
-        if (alertDiv.parentNode) {
-            alertDiv.remove();
-        }
-    }, 5000);
-} 
+                                    `<img src="${IMAGE_BASE_URL}${pedigree.greatGrandmother.image}" class="pedigree-image-enhanced" alt="GG Mother">`

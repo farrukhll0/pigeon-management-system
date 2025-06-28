@@ -115,6 +115,6 @@ const pigeonSchema = new mongoose.Schema({
 
 // Index for better query performance
 pigeonSchema.index({ user: 1, name: 1 });
-pigeonSchema.index({ user: 1, breedName: 1 });
+pigeonSchema.index({ user: 1, strain: 1 });
 
 module.exports = mongoose.model('Pigeon', pigeonSchema); 

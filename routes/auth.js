@@ -6,19 +6,10 @@ const { auth } = require('../middleware/auth');
 const connectDB = require('../lib/db');
 const router = express.Router();
 
-// Middleware to ensure database connection
-const ensureDBConnection = async (req, res, next) => {
+// Register new user
+router.post('/signup', async (req, res) => {
   try {
     await connectDB();
-    next();
-  } catch (error) {
-    res.status(500).json({ message: 'Database connection failed' });
-  }
-};
-
-// Register new user
-router.post('/signup', ensureDBConnection, async (req, res) => {
-  try {
     const { name, email, password } = req.body;
 
     // Check if user already exists
@@ -53,13 +44,15 @@ router.post('/signup', ensureDBConnection, async (req, res) => {
       }
     });
   } catch (error) {
+    console.error('Signup error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
 
 // Login user
-router.post('/login', ensureDBConnection, async (req, res) => {
+router.post('/login', async (req, res) => {
   try {
+    await connectDB();
     const { email, password } = req.body;
 
     // Check if user exists
@@ -91,13 +84,15 @@ router.post('/login', ensureDBConnection, async (req, res) => {
       }
     });
   } catch (error) {
+    console.error('Login error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
 
 // Get current user
-router.get('/me', ensureDBConnection, async (req, res) => {
+router.get('/me', auth, async (req, res) => {
   try {
+    await connectDB();
     const token = req.header('Authorization')?.replace('Bearer ', '');
     if (!token) {
       return res.status(401).json({ message: 'No token provided' });
@@ -109,7 +104,42 @@ router.get('/me', ensureDBConnection, async (req, res) => {
     }
     res.json(user);
   } catch (error) {
+    console.error('Get user error:', error);
     res.status(401).json({ message: 'Invalid token' });
+  }
+});
+
+// Update user profile
+router.put('/profile', auth, async (req, res) => {
+  try {
+    await connectDB();
+    const { name, email } = req.body;
+    
+    // Check if email is already taken by another user
+    if (email) {
+      const existingUser = await User.findOne({ email, _id: { $ne: req.user.id } });
+      if (existingUser) {
+        return res.status(400).json({ message: 'Email already exists' });
+      }
+    }
+    
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { name, email },
+      { new: true, runValidators: true }
+    ).select('-password');
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    res.json({
+      message: 'Profile updated successfully',
+      user
+    });
+  } catch (error) {
+    console.error('Profile update error:', error);
+    res.status(500).json({ message: 'Server error' });
   }
 });
 

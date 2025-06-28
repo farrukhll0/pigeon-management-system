@@ -8,7 +8,9 @@
     "start": "node server.js",
     "build": "echo 'Build completed'",
     "vercel-build": "echo 'Vercel build completed'",
-    "test": "echo 'No tests configured'"
+    "test": "echo 'No tests configured'",
+    "lint": "echo 'No linting configured'",
+    "clean": "echo 'Clean completed'"
   },
   "dependencies": {
     "express": "^4.18.2",

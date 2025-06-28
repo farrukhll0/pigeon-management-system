@@ -73,4 +73,12 @@ dist/
 build/
 
 # Uploads (for local development)
-uploads/ 
+uploads/
+
+# Test files
+test-*.js
+check-*.js
+delete-*.js
+
+# MongoDB data
+data/ 

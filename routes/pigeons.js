@@ -5,20 +5,10 @@ const connectDB = require('../lib/db');
 const { uploadPigeonImages } = require('../middleware/upload');
 const router = express.Router();
 
-// Middleware to ensure database connection
-const ensureDBConnection = async (req, res, next) => {
+// Get all pigeons for the authenticated user
+router.get('/', auth, async (req, res) => {
   try {
     await connectDB();
-    next();
-  } catch (error) {
-    console.error('Database connection error:', error);
-    res.status(500).json({ message: 'Database connection failed' });
-  }
-};
-
-// Get all pigeons for the authenticated user
-router.get('/', auth, ensureDBConnection, async (req, res) => {
-  try {
     const pigeons = await Pigeon.find({ user: req.user.id }).sort({ createdAt: -1 });
     res.json(pigeons);
   } catch (error) {
@@ -28,8 +18,9 @@ router.get('/', auth, ensureDBConnection, async (req, res) => {
 });
 
 // Get single pigeon
-router.get('/:id', auth, ensureDBConnection, async (req, res) => {
+router.get('/:id', auth, async (req, res) => {
   try {
+    await connectDB();
     const pigeon = await Pigeon.findById(req.params.id);
     
     if (!pigeon) {
@@ -49,23 +40,36 @@ router.get('/:id', auth, ensureDBConnection, async (req, res) => {
 });
 
 // Create new pigeon
-router.post('/', auth, ensureDBConnection, uploadPigeonImages, async (req, res) => {
+router.post('/', auth, uploadPigeonImages, async (req, res) => {
   try {
-    console.log('req.body:', req.body);
-    console.log('req.files:', req.files);
-    console.log('req.user:', req.user);
-
+    await connectDB();
     const { name, ringNumber, dateOfBirth, color, sex, strain, breeder, notes, fatherName, motherName } = req.body;
-    // Use pigeonImage if uploaded
+    
+    // Process uploaded images
     let pigeonImage = '';
-    if (req.files && req.files.pigeonImage && req.files.pigeonImage[0]) {
-      pigeonImage = req.files.pigeonImage[0].originalname; // or handle as needed
+    let fatherImage = '';
+    let motherImage = '';
+    let galleryImages = [];
+    
+    if (req.files) {
+      if (req.files.pigeonImage && req.files.pigeonImage[0]) {
+        pigeonImage = req.files.pigeonImage[0].originalname;
+      }
+      if (req.files.fatherImage && req.files.fatherImage[0]) {
+        fatherImage = req.files.fatherImage[0].originalname;
+      }
+      if (req.files.motherImage && req.files.motherImage[0]) {
+        motherImage = req.files.motherImage[0].originalname;
+      }
+      if (req.files.galleryImages) {
+        galleryImages = req.files.galleryImages.map(file => file.originalname);
+      }
     }
 
     if (!name) {
       return res.status(400).json({ message: 'Pigeon name is required.' });
     }
-    if (!req.user || !req.user.userId) {
+    if (!req.user || !req.user.id) {
       return res.status(401).json({ message: 'User not authenticated.' });
     }
 
@@ -81,20 +85,23 @@ router.post('/', auth, ensureDBConnection, uploadPigeonImages, async (req, res) 
       fatherName,
       motherName,
       pigeonImage,
-      user: req.user.userId
+      fatherImage,
+      motherImage,
+      images: galleryImages,
+      user: req.user.id
     });
 
     await pigeon.save();
     res.status(201).json(pigeon);
   } catch (error) {
-    console.error('Error creating pigeon:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 
 // Update pigeon
-router.put('/:id', auth, ensureDBConnection, async (req, res) => {
+router.put('/:id', auth, async (req, res) => {
   try {
+    await connectDB();
     let pigeon = await Pigeon.findById(req.params.id);
     
     if (!pigeon) {
@@ -120,8 +127,9 @@ router.put('/:id', auth, ensureDBConnection, async (req, res) => {
 });
 
 // Delete pigeon
-router.delete('/:id', auth, ensureDBConnection, async (req, res) => {
+router.delete('/:id', auth, async (req, res) => {
   try {
+    await connectDB();
     const pigeon = await Pigeon.findById(req.params.id);
     
     if (!pigeon) {

@@ -14,13 +14,14 @@ const fileFilter = (req, file, cb) => {
     }
 };
 
-// Configure multer for serverless environment
+// Configure multer for serverless environment with optimized settings
 const upload = multer({
     storage: storage,
     fileFilter: fileFilter,
     limits: {
-        fileSize: 5 * 1024 * 1024, // 5MB limit
-        files: 10 // Maximum 10 files
+        fileSize: 5 * 1024 * 1024, // 5MB limit (reduced from 10MB)
+        files: 5, // Maximum 5 files (reduced from 10)
+        fieldSize: 2 * 1024 * 1024 // 2MB field size limit
     }
 });
 
@@ -28,20 +29,14 @@ const upload = multer({
 const uploadSingle = upload.single('image');
 
 // Multiple file upload
-const uploadMultiple = upload.array('images', 10);
+const uploadMultiple = upload.array('images', 5);
 
-// Pigeon images upload (multiple fields)
+// Pigeon images upload (multiple fields) - optimized for fewer files
 const uploadPigeonImages = upload.fields([
     { name: 'pigeonImage', maxCount: 1 },
     { name: 'fatherImage', maxCount: 1 },
     { name: 'motherImage', maxCount: 1 },
-    { name: 'gggFatherImage', maxCount: 1 },
-    { name: 'gggMotherImage', maxCount: 1 },
-    { name: 'ggFatherImage', maxCount: 1 },
-    { name: 'ggMotherImage', maxCount: 1 },
-    { name: 'gFatherImage', maxCount: 1 },
-    { name: 'gMotherImage', maxCount: 1 },
-    { name: 'galleryImages', maxCount: 10 } // Gallery images (up to 10)
+    { name: 'galleryImages', maxCount: 3 } // Reduced from 10 to 3
 ]);
 
 // Profile image upload
@@ -99,7 +94,7 @@ const handleUploadError = (error, req, res, next) => {
         }
         if (error.code === 'LIMIT_FILE_COUNT') {
             return res.status(400).json({ 
-                message: 'Too many files. Maximum is 10 files.' 
+                message: 'Too many files. Maximum is 5 files.' 
             });
         }
         if (error.code === 'LIMIT_UNEXPECTED_FILE') {
@@ -115,7 +110,6 @@ const handleUploadError = (error, req, res, next) => {
         });
     }
     
-    console.error('Upload error:', error);
     res.status(500).json({ message: 'File upload failed.' });
 };
 

@@ -11,10 +11,10 @@ const auth = async (req, res, next) => {
         // Verify token and decode user ID
         const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
         
-        // For serverless functions, we'll just pass the decoded token
-        // The actual user lookup can be done in the route handler if needed
+        // Set both id and userId for compatibility with different route patterns
         req.user = {
-            userId: decoded.userId,
+            id: decoded.userId,        // For routes expecting req.user.id
+            userId: decoded.userId,    // For routes expecting req.user.userId
             ...decoded
         };
         
@@ -53,7 +53,12 @@ const authWithUser = async (req, res, next) => {
             return res.status(401).json({ message: 'Invalid token. User not found.' });
         }
 
-        req.user = user;
+        // Set both id and userId for compatibility
+        req.user = {
+            ...user.toObject(),
+            id: user._id,
+            userId: user._id
+        };
         next();
     } catch (error) {
         if (error.name === 'JsonWebTokenError') {
