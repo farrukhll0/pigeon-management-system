@@ -115,7 +115,6 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeImageUploads();
     initializeSearchAndFilter();
     checkAuthStatus();
-    addTestButton();
 });
 
 // Initialize all event listeners
@@ -400,6 +399,12 @@ function checkAuthStatus() {
 function showAuthSection() {
     authSection.classList.remove('hidden');
     mainApp.classList.add('hidden');
+    
+    // Remove test button when showing auth section
+    const existingButton = document.querySelector('.test-image-upload-btn');
+    if (existingButton) {
+        existingButton.remove();
+    }
 }
 
 // Show main application
@@ -410,6 +415,7 @@ function showMainApp() {
         userInfo.textContent = `Welcome, ${currentUser.name}`;
     }
     initializePigeonButtons();
+    addTestButton();
 }
 
 // Handle login
@@ -1157,9 +1163,20 @@ function testImageUpload() {
 
 // Add test button to the page
 function addTestButton() {
+    // Only add test button if user is logged in and in main app
+    if (!currentUser || !mainApp || mainApp.classList.contains('hidden')) {
+        return;
+    }
+    
+    // Remove existing test button if it exists
+    const existingButton = document.querySelector('.test-image-upload-btn');
+    if (existingButton) {
+        existingButton.remove();
+    }
+    
     const testButton = document.createElement('button');
     testButton.textContent = 'Test Image Upload';
-    testButton.className = 'btn btn-warning btn-sm';
+    testButton.className = 'btn btn-warning btn-sm test-image-upload-btn';
     testButton.onclick = testImageUpload;
     testButton.style.position = 'fixed';
     testButton.style.top = '10px';
