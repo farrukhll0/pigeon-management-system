@@ -610,20 +610,49 @@ async function savePigeon() {
             { id: 'motherImageInput', field: 'motherImage' }
         ];
 
-        console.log('Processing images...');
+        console.log('=== IMAGE UPLOAD DEBUG ===');
         
         for (const input of imageInputs) {
             const fileInput = document.getElementById(input.id);
+            console.log(`Checking ${input.id}:`, fileInput);
+            
             if (fileInput && fileInput.files[0]) {
                 const file = fileInput.files[0];
-                console.log(`Processing ${input.field}:`, file.name, file.size, file.type);
+                console.log(`File found for ${input.field}:`, {
+                    name: file.name,
+                    size: file.size,
+                    type: file.type,
+                    lastModified: file.lastModified
+                });
+                
+                // Validate file type
+                if (!file.type.startsWith('image/')) {
+                    console.error(`Invalid file type for ${input.field}:`, file.type);
+                    showAlert(`Please select a valid image file for ${input.field}`, 'warning');
+                    continue;
+                }
                 
                 // Convert file to base64
-                const base64 = await fileToBase64(file);
-                imageData[input.field] = base64;
-                console.log(`${input.field} converted to base64`);
+                try {
+                    const base64 = await fileToBase64(file);
+                    console.log(`${input.field} base64 length:`, base64.length);
+                    console.log(`${input.field} base64 preview:`, base64.substring(0, 50) + '...');
+                    imageData[input.field] = base64;
+                    console.log(`${input.field} converted successfully`);
+                } catch (error) {
+                    console.error(`Error converting ${input.field}:`, error);
+                    showAlert(`Failed to process ${input.field}`, 'warning');
+                }
+            } else {
+                console.log(`No file selected for ${input.field}`);
             }
         }
+
+        console.log('Final image data:', {
+            hasPigeonImage: !!imageData.pigeonImage,
+            hasFatherImage: !!imageData.fatherImage,
+            hasMotherImage: !!imageData.motherImage
+        });
 
         // Create pigeon with image data
         const pigeonData = {
@@ -665,6 +694,11 @@ async function savePigeon() {
         });
         
         console.log('Pigeon saved successfully:', savedPigeon);
+        console.log('Saved pigeon images:', {
+            hasPigeonImage: !!savedPigeon.pigeonImage,
+            hasFatherImage: !!savedPigeon.fatherImage,
+            hasMotherImage: !!savedPigeon.motherImage
+        });
         
         if (editingPigeonId) {
             const index = pigeons.findIndex(p => p._id === editingPigeonId);
