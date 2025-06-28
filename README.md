@@ -252,4 +252,8 @@ If you encounter any issues or have questions:
 
 ---
 
-**Happy Pigeon Managing! 🐦✨** 
+**Happy Pigeon Managing! 🐦✨**
+
+## 🚀 Deployment Trigger
+
+Updated for latest image upload fixes 
