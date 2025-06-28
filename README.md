@@ -14,7 +14,7 @@ A full-stack web application for managing pigeon breeding, racing, and pedigree 
 
 ## 🚀 Live Demo
 
-Visit: [Your Vercel URL here]
+Visit: [Your Vercel URL here] - Replace with your actual Vercel URL after deployment
 
 ## 🛠️ Tech Stack
 

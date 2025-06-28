@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const { auth } = require('../middleware/auth');
 const connectDB = require('../lib/db');
+const { uploadProfileImage } = require('../middleware/upload');
 const router = express.Router();
 
 // Register new user
@@ -139,6 +140,43 @@ router.put('/profile', auth, async (req, res) => {
     });
   } catch (error) {
     console.error('Profile update error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Upload profile image
+router.post('/profile-image', auth, uploadProfileImage, async (req, res) => {
+  try {
+    await connectDB();
+    
+    if (!req.file) {
+      return res.status(400).json({ message: 'No image file provided' });
+    }
+    
+    // For now, we'll store the filename (in production, you'd upload to cloud storage)
+    const profileImage = req.file.originalname;
+    
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { profileImage },
+      { new: true, runValidators: true }
+    ).select('-password');
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    res.json({
+      message: 'Profile image updated successfully',
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        profileImage: user.profileImage
+      }
+    });
+  } catch (error) {
+    console.error('Profile image upload error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });

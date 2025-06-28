@@ -806,4 +806,111 @@ function viewPigeon(pigeonId) {
                             <div class="pedigree-item-enhanced">
                                 <strong>Great-Grandmother</strong>
                                 ${pedigree.greatGrandmother && pedigree.greatGrandmother.image ? 
-                                    `<img src="${IMAGE_BASE_URL}${pedigree.greatGrandmother.image}" class="pedigree-image-enhanced" alt="GG Mother">`
+                                    `<img src="${IMAGE_BASE_URL}${pedigree.greatGrandmother.image}" class="pedigree-image-enhanced" alt="GG Mother">` : 
+                                    '<div class="pedigree-image-enhanced bg-light d-flex align-items-center justify-content-center"><i class="fas fa-user text-muted"></i></div>'
+                                }
+                                <div>${pedigree.greatGrandmother ? pedigree.greatGrandmother.name : 'Unknown'}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Save profile
+async function saveProfile() {
+    try {
+        const token = localStorage.getItem('authToken');
+        
+        // First, update profile information (name, email)
+        const profileData = await apiFetch(`${API_BASE_URL}/auth/profile`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                name: document.getElementById('profileName').value.trim(),
+                email: document.getElementById('profileEmail').value.trim()
+            })
+        });
+
+        // Then, handle profile image upload if a file is selected
+        const profileImageInput = document.getElementById('profileImageInput');
+        if (profileImageInput && profileImageInput.files[0]) {
+            const imageFormData = new FormData();
+            imageFormData.append('profileImage', profileImageInput.files[0]);
+            
+            const imageData = await apiFetch(`${API_BASE_URL}/auth/profile-image`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
+                body: imageFormData
+            });
+            
+            // Update current user with new image data
+            currentUser = { ...profileData.user, profileImage: imageData.user.profileImage };
+        } else {
+            currentUser = profileData.user;
+        }
+        
+        localStorage.setItem('user', JSON.stringify(currentUser));
+        
+        if (userInfo) {
+            userInfo.textContent = `Welcome, ${currentUser.name}`;
+        }
+        
+        showAlert('Profile updated successfully!', 'success');
+        bootstrap.Modal.getInstance(document.getElementById('profileModal')).hide();
+    } catch (error) {
+        showAlert(error.message || 'Failed to update profile', 'danger');
+    }
+}
+
+// Load user profile
+async function loadUserProfile() {
+    try {
+        const token = localStorage.getItem('authToken');
+        const user = await apiFetch(`${API_BASE_URL}/auth/me`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        document.getElementById('profileName').value = user.name || '';
+        document.getElementById('profileEmail').value = user.email || '';
+        
+        if (user.profileImage) {
+            document.getElementById('profileImagePreview').innerHTML = 
+                `<img src="${IMAGE_BASE_URL}${user.profileImage}" class="rounded-circle" style="width: 100px; height: 100px; object-fit: cover;">`;
+        }
+    } catch (error) {
+        // Silently fail - profile loading is not critical
+    }
+}
+
+// Show alert message
+function showAlert(message, type) {
+    const alertContainer = document.getElementById('alertContainer');
+    if (!alertContainer) return;
+    
+    const alertId = 'alert-' + Date.now();
+    const alertHTML = `
+        <div id="${alertId}" class="alert alert-${type} alert-dismissible fade show" role="alert">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    alertContainer.innerHTML = alertHTML;
+    
+    // Auto-dismiss after 5 seconds
+    setTimeout(() => {
+        const alert = document.getElementById(alertId);
+        if (alert) {
+            alert.remove();
+        }
+    }, 5000);
+}
