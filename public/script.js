@@ -110,6 +110,7 @@ const clearFilters = document.getElementById('clearFilters');
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, initializing application...');
     initializeEventListeners();
     initializeImageUploads();
     initializeSearchAndFilter();
@@ -119,6 +120,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Initialize all event listeners
 function initializeEventListeners() {
+    console.log('Initializing event listeners...');
+    
     // Authentication form switches
     if (showSignupLink) {
         showSignupLink.addEventListener('click', (e) => {
@@ -147,14 +150,6 @@ function initializeEventListeners() {
         logoutBtn.addEventListener('click', handleLogout);
     }
 
-    // Pigeon management
-    if (savePigeonBtn) {
-        savePigeonBtn.addEventListener('click', savePigeon);
-    }
-    if (editPigeonBtn) {
-        editPigeonBtn.addEventListener('click', editCurrentPigeon);
-    }
-
     // Profile management
     if (saveProfileBtn) {
         saveProfileBtn.addEventListener('click', saveProfile);
@@ -170,6 +165,30 @@ function initializeEventListeners() {
     const profileImageInput = document.getElementById('profileImageInput');
     if (profileImageInput) {
         profileImageInput.addEventListener('change', handleProfileImageUpload);
+    }
+    
+    console.log('Event listeners initialized');
+}
+
+// Re-initialize pigeon management buttons after main app is shown
+function initializePigeonButtons() {
+    console.log('Initializing pigeon management buttons...');
+    
+    // Pigeon management buttons
+    const savePigeonBtn = document.getElementById('savePigeonBtn');
+    if (savePigeonBtn) {
+        console.log('Found savePigeonBtn, adding event listener');
+        savePigeonBtn.addEventListener('click', savePigeon);
+    } else {
+        console.log('savePigeonBtn not found');
+    }
+    
+    const editPigeonBtn = document.getElementById('editPigeonBtn');
+    if (editPigeonBtn) {
+        console.log('Found editPigeonBtn, adding event listener');
+        editPigeonBtn.addEventListener('click', editCurrentPigeon);
+    } else {
+        console.log('editPigeonBtn not found');
     }
 }
 
@@ -390,6 +409,7 @@ function showMainApp() {
     if (userInfo) {
         userInfo.textContent = `Welcome, ${currentUser.name}`;
     }
+    initializePigeonButtons();
 }
 
 // Handle login
@@ -1137,4 +1157,116 @@ function addTestButton() {
     testButton.style.right = '10px';
     testButton.style.zIndex = '9999';
     document.body.appendChild(testButton);
+}
+
+// Edit current pigeon
+function editCurrentPigeon() {
+    console.log('Edit pigeon button clicked');
+    if (!editingPigeonId) {
+        showAlert('No pigeon selected for editing', 'warning');
+        return;
+    }
+    
+    const pigeon = pigeons.find(p => p._id === editingPigeonId);
+    if (!pigeon) {
+        showAlert('Pigeon not found', 'error');
+        return;
+    }
+    
+    // Fill form with pigeon data
+    document.getElementById('pigeonName').value = pigeon.name || '';
+    document.getElementById('ringNumber').value = pigeon.ringNumber || '';
+    document.getElementById('dateOfBirth').value = pigeon.dateOfBirth || '';
+    document.getElementById('color').value = pigeon.color || '';
+    document.getElementById('sex').value = pigeon.sex || 'Unknown';
+    document.getElementById('strain').value = pigeon.strain || '';
+    document.getElementById('breeder').value = pigeon.breeder || '';
+    document.getElementById('notes').value = pigeon.notes || '';
+    document.getElementById('fatherName').value = pigeon.fatherName || '';
+    document.getElementById('motherName').value = pigeon.motherName || '';
+    
+    // Show images if they exist
+    if (pigeon.pigeonImage) {
+        document.getElementById('pigeonImagePreview').innerHTML = `
+            <div class="image-container">
+                <img src="${pigeon.pigeonImage}" class="image-preview" alt="Pigeon Preview">
+                <button type="button" class="remove-image" onclick="removeImage('pigeonImageInput', 'pigeonImagePreview')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+    }
+    
+    if (pigeon.fatherImage) {
+        document.getElementById('fatherImagePreview').innerHTML = `
+            <div class="image-container">
+                <img src="${pigeon.fatherImage}" class="image-preview" alt="Father Preview">
+                <button type="button" class="remove-image" onclick="removeImage('fatherImageInput', 'fatherImagePreview')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+    }
+    
+    if (pigeon.motherImage) {
+        document.getElementById('motherImagePreview').innerHTML = `
+            <div class="image-container">
+                <img src="${pigeon.motherImage}" class="image-preview" alt="Mother Preview">
+                <button type="button" class="remove-image" onclick="removeImage('motherImageInput', 'motherImagePreview')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+    }
+    
+    // Update modal title
+    document.getElementById('modalTitle').textContent = 'Edit Pigeon';
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('addPigeonModal'));
+    modal.show();
+}
+
+// Handle profile image upload
+function handleProfileImageUpload(event) {
+    console.log('=== PROFILE IMAGE UPLOAD ===');
+    const file = event.target.files[0];
+    const preview = document.getElementById('profileImagePreview');
+    
+    console.log('Profile image file:', file);
+    
+    if (file && file.type.startsWith('image/')) {
+        console.log('✅ Valid profile image detected:', {
+            name: file.name,
+            size: file.size,
+            type: file.type
+        });
+        
+        // Check file size (limit to 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            showAlert('Profile image size must be less than 5MB', 'warning');
+            event.target.value = '';
+            return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            console.log('✅ Profile image read successfully');
+            preview.src = e.target.result;
+        };
+        
+        reader.onerror = function(error) {
+            console.error('❌ Error reading profile image:', error);
+            showAlert('Error reading profile image', 'danger');
+        };
+        
+        reader.readAsDataURL(file);
+    } else {
+        console.log('❌ Invalid profile image file');
+        if (file) {
+            console.log('File type:', file.type);
+            showAlert('Please select a valid image file for profile', 'warning');
+        }
+        event.target.value = '';
+    }
 }
