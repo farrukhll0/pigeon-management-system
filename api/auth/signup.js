@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../../models/User');
 const connectDB = require('../../lib/db');
 
-module.exports = async (req, res) => {
+export default async function handler(req, res) {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
@@ -102,4 +102,4 @@ module.exports = async (req, res) => {
     
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-}; 
+} 
