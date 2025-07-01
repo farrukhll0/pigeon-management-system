@@ -8,10 +8,10 @@ let isLoading = false;
 // API Base URL - Environment-based configuration
 const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
 const API_BASE_URL = isProduction 
-    ? '/api'  // Vercel deployment - same domain
+    ? 'https://your-render-backend-url.onrender.com/api'  // Replace with your Render URL
     : 'http://localhost:3000/api';
 const IMAGE_BASE_URL = isProduction 
-    ? '/api'  // Vercel deployment - same domain
+    ? 'https://your-render-backend-url.onrender.com'  // Replace with your Render URL
     : 'http://localhost:3000';
 
 // Enhanced fetch wrapper with better error handling and retry logic
