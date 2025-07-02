@@ -8,10 +8,10 @@ let isLoading = false;
 // API Base URL - Environment-based configuration
 const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
 const API_BASE_URL = isProduction 
-    ? 'https://your-render-backend-url.onrender.com/api'  // Replace with your Render URL
+    ? 'https://pigeon-management-system-production.up.railway.app/api'
     : 'http://localhost:3000/api';
 const IMAGE_BASE_URL = isProduction 
-    ? 'https://your-render-backend-url.onrender.com'  // Replace with your Render URL
+    ? 'https://pigeon-management-system-production.up.railway.app'
     : 'http://localhost:3000';
 
 // Enhanced fetch wrapper with better error handling and retry logic
@@ -1139,45 +1139,41 @@ function viewPigeon(pigeonId) {
 async function saveProfile() {
     try {
         const token = localStorage.getItem('authToken');
-        
         // First, update profile information (name, email)
         const profileData = await apiFetch(`${API_BASE_URL}/auth/profile`, {
             method: 'PUT',
             headers: {
-                'Authorization': `Bearer ${token}`
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify({
                 name: document.getElementById('profileName').value.trim(),
                 email: document.getElementById('profileEmail').value.trim()
             })
         });
-
         // Then, handle profile image upload if a file is selected
         const profileImageInput = document.getElementById('profileImageInput');
         if (profileImageInput && profileImageInput.files[0]) {
-            const imageFormData = new FormData();
-            imageFormData.append('profileImage', profileImageInput.files[0]);
-            
+            const file = profileImageInput.files[0];
+            // Convert file to base64
+            const base64 = await fileToBase64(file);
             const imageData = await apiFetch(`${API_BASE_URL}/auth/profile-image`, {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${token}`
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
                 },
-                body: imageFormData
+                body: JSON.stringify({ profileImage: base64 })
             });
-            
             // Update current user with new image data
             currentUser = { ...profileData.user, profileImage: imageData.user.profileImage };
         } else {
             currentUser = profileData.user;
         }
-        
         localStorage.setItem('user', JSON.stringify(currentUser));
-        
         if (userInfo) {
             userInfo.textContent = `Welcome, ${currentUser.name}`;
         }
-        
         showAlert('Profile updated successfully!', 'success');
         bootstrap.Modal.getInstance(document.getElementById('profileModal')).hide();
     } catch (error) {
