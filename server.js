@@ -12,9 +12,9 @@ process.env.PORT = process.env.PORT || 3000;
 const connectDB = require('./lib/db');
 
 // Import routes
+console.log('Importing routes...');
 const authRoutes = require('./routes/auth');
 const pigeonRoutes = require('./routes/pigeons');
-
 console.log('Routes imported successfully');
 
 const app = express();
@@ -40,7 +40,6 @@ app.get('/api/health', (req, res) => {
     NODE_ENV: process.env.NODE_ENV || 'development',
     VERCEL: process.env.VERCEL ? 'Yes' : 'No'
   };
-  
   res.json({ 
     status: 'OK', 
     message: 'Server is running',
@@ -71,4 +70,5 @@ if (!process.env.VERCEL) {
     });
 }
 
+// Export for serverless
 module.exports = app; 
