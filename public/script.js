@@ -455,6 +455,15 @@ function showMainApp() {
     if (userInfo) {
         userInfo.textContent = `Welcome, ${currentUser.name}`;
     }
+    // Set profile image in navbar
+    const profileImg = document.getElementById('userProfileImage');
+    if (profileImg) {
+        if (currentUser.profileImage && currentUser.profileImage.startsWith('data:image/')) {
+            profileImg.src = currentUser.profileImage;
+        } else {
+            profileImg.src = 'https://via.placeholder.com/32x32/667eea/ffffff?text=U';
+        }
+    }
     initializePigeonButtons();
 }
 
@@ -1174,8 +1183,22 @@ async function saveProfile() {
         if (userInfo) {
             userInfo.textContent = `Welcome, ${currentUser.name}`;
         }
+        // Update the profile image in the navbar
+        const profileImg = document.getElementById('userProfileImage');
+        if (profileImg) {
+            if (currentUser.profileImage && currentUser.profileImage.startsWith('data:image/')) {
+                profileImg.src = currentUser.profileImage + '?t=' + Date.now();
+            } else {
+                profileImg.src = 'https://via.placeholder.com/32x32/667eea/ffffff?text=U';
+            }
+        }
         showAlert('Profile updated successfully!', 'success');
         bootstrap.Modal.getInstance(document.getElementById('profileModal')).hide();
+        // Update the profile image in the modal
+        if (document.getElementById('profileImagePreview')) {
+            document.getElementById('profileImagePreview').innerHTML = 
+                `<img src="${currentUser.profileImage && currentUser.profileImage.startsWith('data:image/') ? currentUser.profileImage + '?t=' + Date.now() : 'https://via.placeholder.com/100x100/667eea/ffffff?text=U'}" class="rounded-circle" style="width: 100px; height: 100px; object-fit: cover;">`;
+        }
     } catch (error) {
         showAlert(error.message || 'Failed to update profile', 'danger');
     }
