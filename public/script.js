@@ -1452,4 +1452,7 @@ async function deletePigeon(pigeonId) {
         console.error('Error deleting pigeon:', error);
         showAlert(error.message || 'Failed to delete pigeon', 'danger');
     }
-} 
+}
+
+window.viewPigeon = viewPigeon;
+window.editPigeon = editPigeon; 
