@@ -585,6 +585,7 @@ function handleLogout() {
 // Load pigeons from API
 async function loadPigeons() {
     try {
+        console.log('=== LOAD PIGEONS DEBUG ===');
         const token = localStorage.getItem('authToken');
         
         if (!token) {
@@ -592,14 +593,22 @@ async function loadPigeons() {
             return;
         }
         
+        console.log('Loading pigeons from API...');
         const pigeons = await apiFetch(`${API_BASE_URL}/pigeons`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
         });
 
+        console.log('Pigeons loaded from API:', pigeons);
+        console.log('Number of pigeons:', pigeons.length);
+        
         window.pigeons = pigeons;
         filteredPigeons = [...pigeons];
+        
+        console.log('Global pigeons array set:', window.pigeons);
+        console.log('Filtered pigeons array set:', filteredPigeons);
+        
         renderPigeons();
     } catch (error) {
         console.error('Error loading pigeons:', error);
@@ -662,9 +671,15 @@ function clearAllFilters() {
 
 // Render pigeons in the grid
 function renderPigeons() {
+    console.log('=== RENDER PIGEONS DEBUG ===');
+    console.log('Filtered pigeons length:', filteredPigeons.length);
+    console.log('Global pigeons length:', pigeons.length);
+    
     const pigeonsToRender = filteredPigeons.length > 0 ? filteredPigeons : pigeons;
+    console.log('Pigeons to render:', pigeonsToRender.length);
     
     if (pigeonsToRender.length === 0) {
+        console.log('No pigeons to render, showing empty state');
         pigeonsGrid.innerHTML = `
             <div class="col-12 text-center">
                 <div class="card bg-white bg-opacity-90 p-5">
@@ -1004,11 +1019,19 @@ function resetPigeonForm() {
 
 // View pigeon details
 function viewPigeon(pigeonId) {
+    console.log('=== VIEW PIGEON DEBUG ===');
     console.log('View pigeon called with ID:', pigeonId);
+    console.log('Pigeons array length:', pigeons.length);
+    console.log('Filtered pigeons length:', filteredPigeons.length);
+    console.log('All pigeons:', pigeons);
+    
     editingPigeonId = pigeonId; // Set this for the edit button in the modal
     
     const pigeon = pigeons.find(p => p._id === pigeonId);
+    console.log('Found pigeon:', pigeon);
+    
     if (!pigeon) {
+        console.error('Pigeon not found in array');
         showAlert('Pigeon not found', 'error');
         return;
     }
@@ -1365,11 +1388,18 @@ function handleProfileImageUpload(event) {
 
 // Edit pigeon
 function editPigeon(pigeonId) {
+    console.log('=== EDIT PIGEON DEBUG ===');
     console.log('Edit pigeon called with ID:', pigeonId);
+    console.log('Pigeons array length:', pigeons.length);
+    console.log('Filtered pigeons length:', filteredPigeons.length);
+    
     editingPigeonId = pigeonId;
     
     const pigeon = pigeons.find(p => p._id === pigeonId);
+    console.log('Found pigeon for editing:', pigeon);
+    
     if (!pigeon) {
+        console.error('Pigeon not found in array for editing');
         showAlert('Pigeon not found', 'error');
         return;
     }
@@ -1456,4 +1486,5 @@ async function deletePigeon(pigeonId) {
 }
 
 window.viewPigeon = viewPigeon;
-window.editPigeon = editPigeon; 
+window.editPigeon = editPigeon;
+window.deletePigeon = deletePigeon; 
