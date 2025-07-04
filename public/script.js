@@ -482,6 +482,15 @@ function showMainApp() {
     }
     setNavbarProfileImage(currentUser.profileImage);
     initializePigeonButtons();
+    
+    // Ensure pigeons are loaded
+    console.log('Main app shown, checking pigeons data...');
+    if (pigeons.length === 0) {
+        console.log('No pigeons data, loading...');
+        loadPigeons();
+    } else {
+        console.log('Pigeons data already loaded:', pigeons.length, 'pigeons');
+    }
 }
 
 // Handle login
@@ -1025,6 +1034,16 @@ function viewPigeon(pigeonId) {
     console.log('Filtered pigeons length:', filteredPigeons.length);
     console.log('All pigeons:', pigeons);
     
+    // Fallback: if pigeons array is empty, try to reload data
+    if (pigeons.length === 0) {
+        console.log('Pigeons array is empty, attempting to reload data...');
+        loadPigeons().then(() => {
+            // Retry after reloading
+            setTimeout(() => viewPigeon(pigeonId), 1000);
+        });
+        return;
+    }
+    
     editingPigeonId = pigeonId; // Set this for the edit button in the modal
     
     const pigeon = pigeons.find(p => p._id === pigeonId);
@@ -1032,6 +1051,7 @@ function viewPigeon(pigeonId) {
     
     if (!pigeon) {
         console.error('Pigeon not found in array');
+        console.log('Available pigeon IDs:', pigeons.map(p => p._id));
         showAlert('Pigeon not found', 'error');
         return;
     }
@@ -1393,6 +1413,16 @@ function editPigeon(pigeonId) {
     console.log('Pigeons array length:', pigeons.length);
     console.log('Filtered pigeons length:', filteredPigeons.length);
     
+    // Fallback: if pigeons array is empty, try to reload data
+    if (pigeons.length === 0) {
+        console.log('Pigeons array is empty, attempting to reload data...');
+        loadPigeons().then(() => {
+            // Retry after reloading
+            setTimeout(() => editPigeon(pigeonId), 1000);
+        });
+        return;
+    }
+    
     editingPigeonId = pigeonId;
     
     const pigeon = pigeons.find(p => p._id === pigeonId);
@@ -1400,6 +1430,7 @@ function editPigeon(pigeonId) {
     
     if (!pigeon) {
         console.error('Pigeon not found in array for editing');
+        console.log('Available pigeon IDs:', pigeons.map(p => p._id));
         showAlert('Pigeon not found', 'error');
         return;
     }
