@@ -1034,8 +1034,13 @@ function viewPigeon(pigeonId) {
     console.log('Filtered pigeons length:', filteredPigeons.length);
     console.log('All pigeons:', pigeons);
     
-    // Test if function is being called
-    alert('View pigeon function called with ID: ' + pigeonId);
+    // Check if viewPigeonModal exists
+    const viewModal = document.getElementById('viewPigeonModal');
+    if (!viewModal) {
+        console.error('viewPigeonModal element not found');
+        showAlert('Modal element not found', 'error');
+        return;
+    }
     
     // Fallback: if pigeons array is empty, try to reload data
     if (pigeons.length === 0) {
@@ -1061,7 +1066,15 @@ function viewPigeon(pigeonId) {
 
     const pedigree = pigeon.pedigree || {};
     
-    document.getElementById('pigeonDetails').innerHTML = `
+    // Check if pigeonDetails element exists
+    const pigeonDetails = document.getElementById('pigeonDetails');
+    if (!pigeonDetails) {
+        console.error('pigeonDetails element not found');
+        showAlert('Details element not found', 'error');
+        return;
+    }
+    
+    pigeonDetails.innerHTML = `
         <!-- Main Pigeon Image -->
         <div class="row mb-4">
             <div class="col-12">
@@ -1203,8 +1216,14 @@ function viewPigeon(pigeonId) {
     `;
     
     // Show the modal
-    const modal = new bootstrap.Modal(document.getElementById('viewPigeonModal'));
-    modal.show();
+    try {
+        const modal = new bootstrap.Modal(document.getElementById('viewPigeonModal'));
+        modal.show();
+        console.log('Modal shown successfully');
+    } catch (error) {
+        console.error('Error showing modal:', error);
+        showAlert('Error showing pigeon details', 'error');
+    }
 }
 
 // Save profile
