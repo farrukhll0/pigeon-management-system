@@ -1034,6 +1034,9 @@ function viewPigeon(pigeonId) {
     console.log('Filtered pigeons length:', filteredPigeons.length);
     console.log('All pigeons:', pigeons);
     
+    // Test if function is being called
+    alert('View pigeon function called with ID: ' + pigeonId);
+    
     // Fallback: if pigeons array is empty, try to reload data
     if (pigeons.length === 0) {
         console.log('Pigeons array is empty, attempting to reload data...');
@@ -1193,10 +1196,10 @@ function viewPigeon(pigeonId) {
                                 <div>${pedigree.greatGrandmother ? pedigree.greatGrandmother.name : 'Unknown'}</div>
                             </div>
                         </div>
-                            </div>
-                            </div>
-                        </div>
                     </div>
+                </div>
+            </div>
+        </div>
     `;
     
     // Show the modal
