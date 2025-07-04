@@ -603,19 +603,19 @@ async function loadPigeons() {
         }
         
         console.log('Loading pigeons from API...');
-        const pigeons = await apiFetch(`${API_BASE_URL}/pigeons`, {
+        const pigeonsData = await apiFetch(`${API_BASE_URL}/pigeons`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
         });
 
-        console.log('Pigeons loaded from API:', pigeons);
-        console.log('Number of pigeons:', pigeons.length);
+        console.log('Pigeons loaded from API:', pigeonsData);
+        console.log('Number of pigeons:', pigeonsData.length);
         
         // Update both global variables
-        window.pigeons = pigeons;
-        pigeons = pigeons; // Update the local variable too
-        filteredPigeons = [...pigeons];
+        window.pigeons = pigeonsData;
+        pigeons = pigeonsData; // Update the local variable too
+        filteredPigeons = [...pigeonsData];
         
         console.log('Global pigeons array set:', window.pigeons);
         console.log('Local pigeons array set:', pigeons);
