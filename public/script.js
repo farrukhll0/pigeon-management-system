@@ -1041,6 +1041,7 @@ function viewPigeon(pigeonId) {
         showAlert('Modal element not found', 'error');
         return;
     }
+    console.log('✅ viewPigeonModal found:', viewModal);
     
     // Fallback: if pigeons array is empty, try to reload data
     if (pigeons.length === 0) {
@@ -1073,7 +1074,9 @@ function viewPigeon(pigeonId) {
         showAlert('Details element not found', 'error');
         return;
     }
+    console.log('✅ pigeonDetails found:', pigeonDetails);
     
+    console.log('🔄 Setting innerHTML for pigeon details...');
     pigeonDetails.innerHTML = `
         <!-- Main Pigeon Image -->
         <div class="row mb-4">
@@ -1216,13 +1219,26 @@ function viewPigeon(pigeonId) {
     `;
     
     // Show the modal
+    console.log('🔄 Creating Bootstrap modal...');
     try {
-        const modal = new bootstrap.Modal(document.getElementById('viewPigeonModal'));
+        const modalElement = document.getElementById('viewPigeonModal');
+        console.log('Modal element:', modalElement);
+        
+        if (typeof bootstrap === 'undefined') {
+            console.error('Bootstrap is not loaded');
+            showAlert('Bootstrap library not loaded', 'error');
+            return;
+        }
+        
+        const modal = new bootstrap.Modal(modalElement);
+        console.log('Modal instance created:', modal);
+        
         modal.show();
-        console.log('Modal shown successfully');
+        console.log('✅ Modal shown successfully');
     } catch (error) {
-        console.error('Error showing modal:', error);
-        showAlert('Error showing pigeon details', 'error');
+        console.error('❌ Error showing modal:', error);
+        console.error('Error stack:', error.stack);
+        showAlert('Error showing pigeon details: ' + error.message, 'error');
     }
 }
 
