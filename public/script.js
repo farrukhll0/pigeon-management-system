@@ -8,14 +8,21 @@ let isLoading = false;
 // API Base URL - Environment-based configuration
 const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
 const API_BASE_URL = isProduction 
-    ? 'https://pigeon-management-system-production.up.railway.app/api'
+    ? `${window.location.origin}/api`
     : 'http://localhost:3000/api';
 const IMAGE_BASE_URL = isProduction 
-    ? 'https://pigeon-management-system-production.up.railway.app'
+    ? window.location.origin
     : 'http://localhost:3000';
 
 // Enhanced fetch wrapper with better error handling and retry logic
 async function apiFetch(url, options = {}, retries = 1) {
+    console.log('=== API FETCH DEBUG ===');
+    console.log('URL:', url);
+    console.log('Options:', options);
+    console.log('API_BASE_URL:', API_BASE_URL);
+    console.log('isProduction:', isProduction);
+    console.log('window.location.origin:', window.location.origin);
+    
     const defaultOptions = {
         headers: {
             'Content-Type': 'application/json',
@@ -29,14 +36,20 @@ async function apiFetch(url, options = {}, retries = 1) {
     }
 
     const finalOptions = { ...defaultOptions, ...options };
+    console.log('Final options:', finalOptions);
 
     for (let attempt = 1; attempt <= retries; attempt++) {
         try {
+            console.log(`Attempt ${attempt}/${retries} - Fetching:`, url);
             const response = await fetch(url, finalOptions);
+            
+            console.log('Response status:', response.status);
+            console.log('Response headers:', Object.fromEntries(response.headers.entries()));
             
             // Handle different response types
             if (response.headers.get('content-type')?.includes('application/json')) {
                 const data = await response.json();
+                console.log('Response data:', data);
                 
                 if (!response.ok) {
                     throw new Error(data.message || `HTTP ${response.status}: ${response.statusText}`);
@@ -52,6 +65,8 @@ async function apiFetch(url, options = {}, retries = 1) {
                 return response;
             }
         } catch (error) {
+            console.error(`Attempt ${attempt} failed:`, error);
+            
             // If this is the last attempt, throw the error
             if (attempt === retries) {
                 throw error;
@@ -111,11 +126,36 @@ const clearFilters = document.getElementById('clearFilters');
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM loaded, initializing application...');
+    console.log('Current URL:', window.location.href);
+    console.log('Origin:', window.location.origin);
+    console.log('Hostname:', window.location.hostname);
+    
+    // Test API connectivity
+    testApiConnection();
+    
     initializeEventListeners();
     initializeImageUploads();
     initializeSearchAndFilter();
     checkAuthStatus();
 });
+
+// Test API connection
+async function testApiConnection() {
+    try {
+        console.log('Testing API connection...');
+        const response = await fetch(`${API_BASE_URL}/health`);
+        console.log('Health check response:', response.status);
+        
+        if (response.ok) {
+            const data = await response.json();
+            console.log('Health check data:', data);
+        } else {
+            console.error('Health check failed:', response.status, response.statusText);
+        }
+    } catch (error) {
+        console.error('API connection test failed:', error);
+    }
+}
 
 // Initialize all event listeners
 function initializeEventListeners() {
