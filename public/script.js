@@ -612,10 +612,13 @@ async function loadPigeons() {
         console.log('Pigeons loaded from API:', pigeons);
         console.log('Number of pigeons:', pigeons.length);
         
+        // Update both global variables
         window.pigeons = pigeons;
+        pigeons = pigeons; // Update the local variable too
         filteredPigeons = [...pigeons];
         
         console.log('Global pigeons array set:', window.pigeons);
+        console.log('Local pigeons array set:', pigeons);
         console.log('Filtered pigeons array set:', filteredPigeons);
         
         renderPigeons();
@@ -682,9 +685,12 @@ function clearAllFilters() {
 function renderPigeons() {
     console.log('=== RENDER PIGEONS DEBUG ===');
     console.log('Filtered pigeons length:', filteredPigeons.length);
-    console.log('Global pigeons length:', pigeons.length);
+    console.log('Global pigeons length:', window.pigeons ? window.pigeons.length : 0);
+    console.log('Local pigeons length:', pigeons.length);
     
-    const pigeonsToRender = filteredPigeons.length > 0 ? filteredPigeons : pigeons;
+    // Use the most up-to-date pigeons array
+    const currentPigeons = window.pigeons || pigeons;
+    const pigeonsToRender = filteredPigeons.length > 0 ? filteredPigeons : currentPigeons;
     console.log('Pigeons to render:', pigeonsToRender.length);
     
     if (pigeonsToRender.length === 0) {
@@ -1043,8 +1049,11 @@ function viewPigeon(pigeonId) {
     }
     console.log('✅ viewPigeonModal found:', viewModal);
     
+    // Use the most up-to-date pigeons array
+    const currentPigeons = window.pigeons || pigeons;
+    
     // Fallback: if pigeons array is empty, try to reload data
-    if (pigeons.length === 0) {
+    if (currentPigeons.length === 0) {
         console.log('Pigeons array is empty, attempting to reload data...');
         loadPigeons().then(() => {
             // Retry after reloading
@@ -1055,7 +1064,7 @@ function viewPigeon(pigeonId) {
     
     editingPigeonId = pigeonId; // Set this for the edit button in the modal
     
-    const pigeon = pigeons.find(p => p._id === pigeonId);
+    const pigeon = currentPigeons.find(p => p._id === pigeonId);
     console.log('Found pigeon:', pigeon);
     
     if (!pigeon) {
@@ -1451,8 +1460,11 @@ function editPigeon(pigeonId) {
     console.log('Pigeons array length:', pigeons.length);
     console.log('Filtered pigeons length:', filteredPigeons.length);
     
+    // Use the most up-to-date pigeons array
+    const currentPigeons = window.pigeons || pigeons;
+    
     // Fallback: if pigeons array is empty, try to reload data
-    if (pigeons.length === 0) {
+    if (currentPigeons.length === 0) {
         console.log('Pigeons array is empty, attempting to reload data...');
         loadPigeons().then(() => {
             // Retry after reloading
@@ -1463,7 +1475,7 @@ function editPigeon(pigeonId) {
     
     editingPigeonId = pigeonId;
     
-    const pigeon = pigeons.find(p => p._id === pigeonId);
+    const pigeon = currentPigeons.find(p => p._id === pigeonId);
     console.log('Found pigeon for editing:', pigeon);
     
     if (!pigeon) {
